@@ -1,4 +1,3 @@
-<x-layouts::app :title="__('Dashboard')">
     <section class="space-y-6">
         <div>
             <flux:heading size="xl">{{ __('Procurement Dashboard') }}</flux:heading>
@@ -49,4 +48,3 @@
             @endif
         </div>
     </section>
-</x-layouts::app>

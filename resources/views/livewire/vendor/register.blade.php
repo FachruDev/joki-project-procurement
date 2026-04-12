@@ -1,4 +1,3 @@
-<x-layouts::app :title="__('Vendor Registration Review')">
     <section class="space-y-6">
         <div class="flex flex-wrap items-end justify-between gap-4">
             <div>
@@ -68,4 +67,3 @@
             </table>
         </div>
     </section>
-</x-layouts::app>

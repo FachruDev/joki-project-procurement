@@ -1,4 +1,3 @@
-<x-layouts::app :title="__('RFQ Details')">
     <section class="space-y-6">
         <div class="flex flex-wrap items-start justify-between gap-4">
             <div>
@@ -82,4 +81,3 @@
             </div>
         @endcan
     </section>
-</x-layouts::app>

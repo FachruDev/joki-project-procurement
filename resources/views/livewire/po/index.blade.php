@@ -1,4 +1,3 @@
-<x-layouts::app :title="__('Purchase Orders')">
     <section class="space-y-6">
         <div class="flex items-center justify-between">
             <div>
@@ -50,4 +49,3 @@
             </table>
         </div>
     </section>
-</x-layouts::app>

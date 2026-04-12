@@ -1,4 +1,3 @@
-<x-layouts::app :title="__('Record Goods Receipt')">
     <section class="space-y-6">
         <div>
             <flux:heading size="xl">{{ __('Record Goods Receipt') }}</flux:heading>
@@ -21,4 +20,3 @@
             <flux:button type="submit" variant="primary">{{ __('Save Goods Receipt') }}</flux:button>
         </form>
     </section>
-</x-layouts::app>

@@ -1,4 +1,3 @@
-<x-layouts::app :title="__('Purchase Order Details')">
     <section class="space-y-6">
         <div>
             <flux:heading size="xl">{{ __('Purchase Order #') }}{{ $purchaseOrder->id }}</flux:heading>
@@ -77,4 +76,3 @@
             @endcan
         </div>
     </section>
-</x-layouts::app>

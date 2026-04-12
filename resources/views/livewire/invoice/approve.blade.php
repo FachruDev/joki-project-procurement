@@ -1,4 +1,3 @@
-<x-layouts::app :title="__('Invoice Approval')">
     <section class="space-y-6">
         <div class="flex flex-wrap items-end justify-between gap-3">
             <div>
@@ -70,4 +69,3 @@
             </table>
         </div>
     </section>
-</x-layouts::app>

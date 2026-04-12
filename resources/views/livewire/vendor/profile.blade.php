@@ -1,4 +1,3 @@
-<x-layouts::app :title="__('Vendor Profile')">
     <section class="space-y-8">
         <div>
             <flux:heading size="xl">{{ __('Vendor Profile') }}</flux:heading>
@@ -82,4 +81,3 @@
             </div>
         </div>
     </section>
-</x-layouts::app>
