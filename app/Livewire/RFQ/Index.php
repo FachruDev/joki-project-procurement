@@ -28,7 +28,7 @@ class Index extends Component
             ->with(['creator', 'vendors'])
             ->withCount('responses')
             ->when(
-                $user?->vendor !== null,
+                $user?->vendor !== null && $user?->can('vendor.manage') === false,
                 fn ($query) => $query->whereHas('vendors', fn ($vendorQuery) => $vendorQuery->whereKey($user->vendor->id)),
             )
             ->latest()

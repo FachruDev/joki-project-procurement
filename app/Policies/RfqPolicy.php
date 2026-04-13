@@ -13,7 +13,7 @@ class RfqPolicy
      */
     public function viewAny(User $user): bool
     {
-        if ($user->vendor !== null && $user->vendor->status !== VendorStatus::Approved) {
+        if ($this->shouldEnforceApprovedVendor($user) && $user->vendor->status !== VendorStatus::Approved) {
             return false;
         }
 
@@ -29,11 +29,11 @@ class RfqPolicy
             return false;
         }
 
-        if ($user->vendor !== null && $user->vendor->status !== VendorStatus::Approved) {
+        if ($this->shouldEnforceApprovedVendor($user) && $user->vendor->status !== VendorStatus::Approved) {
             return false;
         }
 
-        if ($user->vendor === null) {
+        if ($user->vendor === null || $user->can('vendor.manage')) {
             return true;
         }
 
@@ -54,5 +54,13 @@ class RfqPolicy
     public function update(User $user, Rfq $rfq): bool
     {
         return $user->can('rfq.create');
+    }
+
+    /**
+     * Determine whether approved vendor status should be enforced for this user.
+     */
+    private function shouldEnforceApprovedVendor(User $user): bool
+    {
+        return $user->vendor !== null && ! $user->can('vendor.manage');
     }
 }

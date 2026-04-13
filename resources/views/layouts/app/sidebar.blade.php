@@ -88,10 +88,16 @@
                     </flux:sidebar.group>
                 @endcanany
 
-                @if (auth()->user()->can('invoice.approve') || (auth()->user()->can('invoice.upload') && auth()->user()->can('po.view')))
+                @php
+                    $canUploadInvoice = auth()->user()->can('invoice.upload')
+                        && auth()->user()->can('po.view')
+                        && auth()->user()->vendor?->status?->value === 'approved';
+                @endphp
+
+                @if (auth()->user()->can('invoice.approve') || $canUploadInvoice)
                     <flux:sidebar.group icon="receipt-percent" :heading="__('Invoices')" expandable :expanded="request()->routeIs('invoices.*')">
-                        @if (auth()->user()->can('invoice.upload') && auth()->user()->can('po.view'))
-                            <flux:sidebar.item :href="route('pos.index')" :current="request()->routeIs('pos.index')" wire:navigate>
+                        @if ($canUploadInvoice)
+                            <flux:sidebar.item :href="route('invoices.index')" :current="request()->routeIs('invoices.index')" wire:navigate>
                                 {{ __('My Invoice Upload') }}
                             </flux:sidebar.item>
                         @endif

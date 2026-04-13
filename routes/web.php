@@ -4,6 +4,7 @@ use App\Livewire\Admin\PermissionManagement;
 use App\Livewire\Admin\UserManagement;
 use App\Livewire\GR\Create as GrCreate;
 use App\Livewire\Invoice\Approve as InvoiceApprove;
+use App\Livewire\Invoice\Index as InvoiceIndex;
 use App\Livewire\Invoice\Upload as InvoiceUpload;
 use App\Livewire\PO\Create as PoCreate;
 use App\Livewire\PO\Index as PoIndex;
@@ -69,6 +70,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('purchase-orders/{purchaseOrder}/goods-receipt', GrCreate::class)
         ->middleware('can:gr.create')
         ->name('gr.create');
+
+    Route::livewire('invoices', InvoiceIndex::class)
+        ->middleware(['can:invoice.upload', 'approved_vendor'])
+        ->name('invoices.index');
 
     Route::livewire('purchase-orders/{purchaseOrder}/invoice/upload', InvoiceUpload::class)
         ->middleware(['can:invoice.upload', 'approved_vendor'])

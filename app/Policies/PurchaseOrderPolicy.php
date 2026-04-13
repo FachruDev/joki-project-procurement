@@ -13,7 +13,7 @@ class PurchaseOrderPolicy
      */
     public function viewAny(User $user): bool
     {
-        if ($user->vendor !== null && $user->vendor->status !== VendorStatus::Approved) {
+        if ($this->shouldEnforceApprovedVendor($user) && $user->vendor->status !== VendorStatus::Approved) {
             return false;
         }
 
@@ -29,11 +29,11 @@ class PurchaseOrderPolicy
             return false;
         }
 
-        if ($user->vendor !== null && $user->vendor->status !== VendorStatus::Approved) {
+        if ($this->shouldEnforceApprovedVendor($user) && $user->vendor->status !== VendorStatus::Approved) {
             return false;
         }
 
-        if ($user->vendor === null) {
+        if ($user->vendor === null || $user->can('vendor.manage')) {
             return true;
         }
 
@@ -54,5 +54,13 @@ class PurchaseOrderPolicy
     public function recordGoodsReceipt(User $user, PurchaseOrder $purchaseOrder): bool
     {
         return $user->can('gr.create');
+    }
+
+    /**
+     * Determine whether approved vendor status should be enforced for this user.
+     */
+    private function shouldEnforceApprovedVendor(User $user): bool
+    {
+        return $user->vendor !== null && ! $user->can('vendor.manage');
     }
 }

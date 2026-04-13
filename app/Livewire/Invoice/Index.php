@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Livewire\PO;
+namespace App\Livewire\Invoice;
 
+use App\Models\Invoice;
 use App\Models\PurchaseOrder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -9,7 +10,7 @@ use Illuminate\View\View;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-#[Title('Purchase Orders')]
+#[Title('My Invoice Upload')]
 class Index extends Component
 {
     /**
@@ -17,23 +18,24 @@ class Index extends Component
      */
     public function mount(): void
     {
-        Gate::authorize('viewAny', PurchaseOrder::class);
+        Gate::authorize('viewAny', Invoice::class);
     }
 
     public function render(): View
     {
-        $user = Auth::user();
+        $vendor = Auth::user()?->vendor;
+
+        if ($vendor === null) {
+            abort(403);
+        }
 
         $orders = PurchaseOrder::query()
-            ->with(['vendor.user', 'rfq'])
-            ->when(
-                $user?->vendor !== null && $user?->can('vendor.manage') === false,
-                fn ($query) => $query->where('vendor_id', $user->vendor->id),
-            )
+            ->with(['invoice.media'])
+            ->where('vendor_id', $vendor->id)
             ->latest()
             ->get();
 
-        return view('livewire.po.index', [
+        return view('livewire.invoice.index', [
             'orders' => $orders,
         ]);
     }

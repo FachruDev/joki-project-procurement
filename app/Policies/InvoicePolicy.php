@@ -14,7 +14,7 @@ class InvoicePolicy
      */
     public function viewAny(User $user): bool
     {
-        if ($user->vendor !== null && $user->vendor->status !== VendorStatus::Approved) {
+        if ($this->shouldEnforceApprovedVendor($user) && $user->vendor->status !== VendorStatus::Approved) {
             return false;
         }
 
@@ -55,5 +55,13 @@ class InvoicePolicy
     public function approve(User $user, Invoice $invoice): bool
     {
         return $user->can('invoice.approve');
+    }
+
+    /**
+     * Determine whether approved vendor status should be enforced for this user.
+     */
+    private function shouldEnforceApprovedVendor(User $user): bool
+    {
+        return $user->vendor !== null && ! $user->can('vendor.manage');
     }
 }
