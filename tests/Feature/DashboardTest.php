@@ -43,4 +43,25 @@ class DashboardTest extends TestCase
             ->assertSee('Purchase Report (PO)')
             ->assertSee('Invoice Report');
     }
+
+    public function test_sidebar_hides_rfq_menu_for_users_without_rfq_permission(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertOk()->assertDontSee('RFQ List');
+    }
+
+    public function test_sidebar_shows_rfq_menu_for_users_with_rfq_permission(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $procurement = User::factory()->create();
+        $procurement->assignRole('Procurement');
+
+        $response = $this->actingAs($procurement)->get(route('dashboard'));
+
+        $response->assertOk()->assertSee('RFQ List');
+    }
 }

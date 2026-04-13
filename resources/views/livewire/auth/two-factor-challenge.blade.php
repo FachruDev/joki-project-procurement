@@ -1,5 +1,10 @@
 <x-layouts::auth :title="__('Two-factor authentication')">
-    <div class="flex flex-col gap-6">
+    <div class="space-y-6">
+        <div class="space-y-1">
+            <flux:heading size="xl">{{ __('Two-Factor Authentication') }}</flux:heading>
+            <flux:text class="text-zinc-600 dark:text-zinc-300">{{ __('Complete verification to secure access to ProChain.') }}</flux:text>
+        </div>
+
         <div
             class="relative w-full h-auto"
             x-cloak
@@ -37,7 +42,7 @@
                 />
             </div>
 
-            <form method="POST" action="{{ route('two-factor.login.store') }}">
+            <form method="POST" action="{{ route('two-factor.login.store') }}" class="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
                 @csrf
 
                 <div class="space-y-5 text-center">

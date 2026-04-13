@@ -17,9 +17,13 @@ use Spatie\Permission\Models\Role;
 #[Title('User Management')]
 class UserManagement extends Component
 {
+    private const string SUPER_ADMIN_ROLE = 'SuperAdmin';
+
     public string $search = '';
 
     public ?int $selectedUserId = null;
+
+    public bool $selectedUserIsLocked = false;
 
     /**
      * @var list<int>
@@ -51,6 +55,7 @@ class UserManagement extends Component
             ->findOrFail($userId);
 
         $this->selectedUserId = $user->id;
+        $this->selectedUserIsLocked = $this->isSuperAdminUser($user);
         $this->selectedRoleIds = $user->roles->pluck('id')->all();
         $this->selectedPermissionIds = $user->permissions->pluck('id')->all();
     }
@@ -71,6 +76,12 @@ class UserManagement extends Component
         ]);
 
         $user = User::query()->findOrFail($validated['selectedUserId']);
+
+        if ($this->isSuperAdminUser($user)) {
+            $this->addError('selectedUserId', __('SuperAdmin account is protected and cannot be modified.'));
+
+            return;
+        }
 
         $roleNames = Role::query()
             ->whereIn('id', $validated['selectedRoleIds'] ?? [])
@@ -142,6 +153,12 @@ class UserManagement extends Component
 
         return view('livewire.admin.user-management', [
             'selectedUser' => $selectedUser,
+            'selectedUserIsLocked' => $this->selectedUserIsLocked,
         ]);
+    }
+
+    private function isSuperAdminUser(User $user): bool
+    {
+        return $user->hasRole(self::SUPER_ADMIN_ROLE);
     }
 }

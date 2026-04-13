@@ -1,11 +1,14 @@
 <x-layouts::auth :title="__('Log in')">
-    <div class="flex flex-col gap-6">
-        <x-auth-header :title="__('Log in to ProChain')" :description="__('Enter your account credentials to continue to ProChain')" />
+    <div class="space-y-6">
+        <div class="space-y-1">
+            <flux:heading size="xl">{{ __('Welcome Back to ProChain') }}</flux:heading>
+            <flux:text class="text-zinc-600 dark:text-zinc-300">{{ __('Sign in to continue your procurement workflow.') }}</flux:text>
+        </div>
 
         <!-- Session Status -->
         <x-auth-session-status class="text-center" :status="session('status')" />
 
-        <form method="POST" action="{{ route('login.store') }}" class="flex flex-col gap-6">
+        <form method="POST" action="{{ route('login.store') }}" class="space-y-5">
             @csrf
 
             <!-- Email Address -->

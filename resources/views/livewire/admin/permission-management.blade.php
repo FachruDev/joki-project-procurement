@@ -46,11 +46,17 @@
             </flux:field>
 
             @if ($selectedRoleId)
+                @if ($selectedRoleIsLocked)
+                    <flux:callout icon="lock-closed" variant="warning" class="mb-4">
+                        {{ __('SuperAdmin role is protected and cannot be edited.') }}
+                    </flux:callout>
+                @endif
+
                 <form wire:submit="saveRolePermissions" class="space-y-4">
                     <div class="grid max-h-72 gap-2 overflow-y-auto rounded-md border border-zinc-200 p-3 dark:border-zinc-700">
                         @foreach ($this->permissions as $permission)
                             <label class="flex items-center gap-2" wire:key="map-permission-{{ $permission->id }}">
-                                <input type="checkbox" wire:model="rolePermissionIds" value="{{ $permission->id }}" class="rounded border-zinc-300" />
+                                <input type="checkbox" wire:model="rolePermissionIds" value="{{ $permission->id }}" class="rounded border-zinc-300" @disabled($selectedRoleIsLocked) />
                                 <span>{{ $permission->name }}</span>
                             </label>
                         @endforeach
@@ -59,7 +65,7 @@
                     <flux:error name="rolePermissionIds" />
                     <flux:error name="rolePermissionIds.*" />
 
-                    <flux:button type="submit" variant="primary">{{ __('Save Mapping') }}</flux:button>
+                    <flux:button type="submit" variant="primary" :disabled="$selectedRoleIsLocked">{{ __('Save Mapping') }}</flux:button>
                 </form>
             @endif
         </div>
@@ -70,7 +76,12 @@
         <div class="mt-4 space-y-3">
             @foreach ($this->roles as $role)
                 <div class="rounded-md border border-zinc-200 p-3 dark:border-zinc-700">
-                    <div class="font-medium">{{ $role->name }}</div>
+                    <div class="font-medium">
+                        {{ $role->name }}
+                        @if ($role->name === 'SuperAdmin')
+                            <flux:badge size="sm" color="purple" class="ms-1">{{ __('Protected') }}</flux:badge>
+                        @endif
+                    </div>
                     <div class="mt-2 flex flex-wrap gap-1">
                         @forelse ($role->permissions as $permission)
                             <flux:badge size="sm">{{ $permission->name }}</flux:badge>

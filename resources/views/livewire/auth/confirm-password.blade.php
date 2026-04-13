@@ -1,13 +1,13 @@
 <x-layouts::auth :title="__('Confirm password')">
-    <div class="flex flex-col gap-6">
-        <x-auth-header
-            :title="__('Confirm password')"
-            :description="__('This is a secure ProChain area. Please confirm your password before continuing.')"
-        />
+    <div class="space-y-6">
+        <div class="space-y-1">
+            <flux:heading size="xl">{{ __('Confirm Password') }}</flux:heading>
+            <flux:text class="text-zinc-600 dark:text-zinc-300">{{ __('This is a secure ProChain area. Re-enter your password to continue.') }}</flux:text>
+        </div>
 
         <x-auth-session-status class="text-center" :status="session('status')" />
 
-        <form method="POST" action="{{ route('password.confirm.store') }}" class="flex flex-col gap-6">
+        <form method="POST" action="{{ route('password.confirm.store') }}" class="space-y-5">
             @csrf
 
             <flux:input

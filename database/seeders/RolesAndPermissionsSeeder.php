@@ -11,6 +11,10 @@ use Spatie\Permission\PermissionRegistrar;
 
 class RolesAndPermissionsSeeder extends Seeder
 {
+    private const string SUPER_ADMIN_ROLE = 'SuperAdmin';
+
+    private const string SUPER_ADMIN_EMAIL = 'superadmin@procurement.test';
+
     /**
      * Run the database seeds.
      */
@@ -37,10 +41,12 @@ class RolesAndPermissionsSeeder extends Seeder
             Permission::findOrCreate($permission, 'web');
         }
 
+        $superAdminRole = Role::findOrCreate(self::SUPER_ADMIN_ROLE, 'web');
         $adminRole = Role::findOrCreate('Admin', 'web');
         $procurementRole = Role::findOrCreate('Procurement', 'web');
         $vendorRole = Role::findOrCreate('Vendor', 'web');
 
+        $superAdminRole->syncPermissions($permissions);
         $adminRole->syncPermissions($permissions);
 
         $procurementRole->syncPermissions([
@@ -68,6 +74,15 @@ class RolesAndPermissionsSeeder extends Seeder
             ],
         );
 
+        $superAdminUser = User::query()->firstOrCreate(
+            ['email' => self::SUPER_ADMIN_EMAIL],
+            [
+                'name' => 'superadmin',
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+            ],
+        );
+
         $procurementUser = User::query()->firstOrCreate(
             ['email' => 'procurement@procurement.test'],
             [
@@ -77,6 +92,7 @@ class RolesAndPermissionsSeeder extends Seeder
             ],
         );
 
+        $superAdminUser->syncRoles([$superAdminRole]);
         $adminUser->syncRoles([$adminRole]);
         $procurementUser->syncRoles([$procurementRole]);
     }

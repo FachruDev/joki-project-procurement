@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Procurement;
 
+use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
@@ -36,15 +37,24 @@ class RolesAndPermissionsSeederTest extends TestCase
         }
 
         $admin = Role::findByName('Admin', 'web');
+        $superAdmin = Role::findByName('SuperAdmin', 'web');
         $procurement = Role::findByName('Procurement', 'web');
         $vendor = Role::findByName('Vendor', 'web');
 
         $this->assertCount(count($permissions), $admin->permissions);
+        $this->assertCount(count($permissions), $superAdmin->permissions);
         $this->assertTrue($admin->hasPermissionTo('invoice.approve'));
         $this->assertTrue($admin->hasPermissionTo('user.manage'));
+        $this->assertTrue($superAdmin->hasPermissionTo('permission.manage'));
         $this->assertTrue($procurement->hasPermissionTo('po.create'));
         $this->assertFalse($procurement->hasPermissionTo('invoice.approve'));
         $this->assertTrue($vendor->hasPermissionTo('invoice.upload'));
         $this->assertFalse($vendor->hasPermissionTo('vendor.approve'));
+
+        $superAdminUser = User::query()->where('email', 'superadmin@procurement.test')->first();
+
+        $this->assertNotNull($superAdminUser);
+        $this->assertSame('superadmin', $superAdminUser->name);
+        $this->assertTrue($superAdminUser->hasRole('SuperAdmin'));
     }
 }

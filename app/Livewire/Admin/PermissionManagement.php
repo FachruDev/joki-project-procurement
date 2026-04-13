@@ -16,11 +16,15 @@ use Spatie\Permission\Models\Role;
 #[Title('Role & Permission Management')]
 class PermissionManagement extends Component
 {
+    private const string SUPER_ADMIN_ROLE = 'SuperAdmin';
+
     public string $permissionName = '';
 
     public string $roleName = '';
 
     public ?int $selectedRoleId = null;
+
+    public bool $selectedRoleIsLocked = false;
 
     /**
      * @var list<int>
@@ -83,6 +87,7 @@ class PermissionManagement extends Component
             ->findOrFail($roleId);
 
         $this->selectedRoleId = $role->id;
+        $this->selectedRoleIsLocked = $this->isSuperAdminRole($role);
         $this->rolePermissionIds = $role->permissions->pluck('id')->all();
     }
 
@@ -100,6 +105,12 @@ class PermissionManagement extends Component
         ]);
 
         $role = Role::query()->findOrFail($validated['selectedRoleId']);
+
+        if ($this->isSuperAdminRole($role)) {
+            $this->addError('selectedRoleId', __('SuperAdmin role is protected and cannot be modified.'));
+
+            return;
+        }
 
         $permissionNames = Permission::query()
             ->whereIn('id', $validated['rolePermissionIds'] ?? [])
@@ -138,6 +149,13 @@ class PermissionManagement extends Component
 
     public function render(): View
     {
-        return view('livewire.admin.permission-management');
+        return view('livewire.admin.permission-management', [
+            'selectedRoleIsLocked' => $this->selectedRoleIsLocked,
+        ]);
+    }
+
+    private function isSuperAdminRole(Role $role): bool
+    {
+        return $role->name === self::SUPER_ADMIN_ROLE;
     }
 }

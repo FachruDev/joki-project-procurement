@@ -1,11 +1,14 @@
 <x-layouts::auth :title="__('Forgot password')">
-    <div class="flex flex-col gap-6">
-        <x-auth-header :title="__('Forgot password')" :description="__('Enter your email to receive a password reset link for your ProChain account')" />
+    <div class="space-y-6">
+        <div class="space-y-1">
+            <flux:heading size="xl">{{ __('Reset ProChain Password') }}</flux:heading>
+            <flux:text class="text-zinc-600 dark:text-zinc-300">{{ __('Enter your email and we will send a secure reset link.') }}</flux:text>
+        </div>
 
         <!-- Session Status -->
         <x-auth-session-status class="text-center" :status="session('status')" />
 
-        <form method="POST" action="{{ route('password.email') }}" class="flex flex-col gap-6">
+        <form method="POST" action="{{ route('password.email') }}" class="space-y-5">
             @csrf
 
             <!-- Email Address -->
@@ -19,7 +22,7 @@
             />
 
             <flux:button variant="primary" type="submit" class="w-full" data-test="email-password-reset-link-button">
-                {{ __('Email password reset link') }}
+                {{ __('Send reset link') }}
             </flux:button>
         </form>
 

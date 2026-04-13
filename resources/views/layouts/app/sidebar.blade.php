@@ -56,11 +56,13 @@
                     </flux:sidebar.group>
                 @endcan
 
-                @can('rfq.view')
+                @canany(['rfq.view', 'rfq.create'])
                     <flux:sidebar.group icon="document-text" :heading="__('RFQ')" expandable :expanded="request()->routeIs('rfqs.*')">
-                        <flux:sidebar.item :href="route('rfqs.index')" :current="request()->routeIs('rfqs.index')" wire:navigate>
-                            {{ __('RFQ List') }}
-                        </flux:sidebar.item>
+                        @can('rfq.view')
+                            <flux:sidebar.item :href="route('rfqs.index')" :current="request()->routeIs('rfqs.index')" wire:navigate>
+                                {{ __('RFQ List') }}
+                            </flux:sidebar.item>
+                        @endcan
 
                         @can('rfq.create')
                             <flux:sidebar.item :href="route('rfqs.create')" :current="request()->routeIs('rfqs.create')" wire:navigate>
@@ -68,13 +70,15 @@
                             </flux:sidebar.item>
                         @endcan
                     </flux:sidebar.group>
-                @endcan
+                @endcanany
 
-                @can('po.view')
+                @canany(['po.view', 'po.create'])
                     <flux:sidebar.group icon="shopping-cart" :heading="__('Purchase Orders')" expandable :expanded="request()->routeIs('pos.*') || request()->routeIs('gr.create')">
-                        <flux:sidebar.item :href="route('pos.index')" :current="request()->routeIs('pos.index')" wire:navigate>
-                            {{ __('PO List') }}
-                        </flux:sidebar.item>
+                        @can('po.view')
+                            <flux:sidebar.item :href="route('pos.index')" :current="request()->routeIs('pos.index')" wire:navigate>
+                                {{ __('PO List') }}
+                            </flux:sidebar.item>
+                        @endcan
 
                         @can('po.create')
                             <flux:sidebar.item :href="route('pos.create')" :current="request()->routeIs('pos.create')" wire:navigate>
@@ -82,10 +86,16 @@
                             </flux:sidebar.item>
                         @endcan
                     </flux:sidebar.group>
-                @endcan
+                @endcanany
 
-                @if (auth()->user()->can('invoice.approve') || auth()->user()->can('invoice.upload'))
+                @if (auth()->user()->can('invoice.approve') || (auth()->user()->can('invoice.upload') && auth()->user()->can('po.view')))
                     <flux:sidebar.group icon="receipt-percent" :heading="__('Invoices')" expandable :expanded="request()->routeIs('invoices.*')">
+                        @if (auth()->user()->can('invoice.upload') && auth()->user()->can('po.view'))
+                            <flux:sidebar.item :href="route('pos.index')" :current="request()->routeIs('pos.index')" wire:navigate>
+                                {{ __('My Invoice Upload') }}
+                            </flux:sidebar.item>
+                        @endif
+
                         @can('invoice.approve')
                             <flux:sidebar.item :href="route('invoices.approve')" :current="request()->routeIs('invoices.approve')" wire:navigate>
                                 {{ __('Invoice Approval') }}

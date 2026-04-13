@@ -41,13 +41,19 @@
                     <flux:text class="mt-1 text-sm">{{ $selectedUser->name }} ({{ $selectedUser->email }})</flux:text>
                 </div>
 
+                @if ($selectedUserIsLocked)
+                    <flux:callout icon="lock-closed" variant="warning" class="mb-4">
+                        {{ __('SuperAdmin account is protected and cannot be modified.') }}
+                    </flux:callout>
+                @endif
+
                 <form wire:submit="saveAssignments" class="space-y-5">
                     <div>
                         <flux:label>{{ __('Roles') }}</flux:label>
                         <div class="mt-2 grid gap-2 rounded-md border border-zinc-200 p-3 dark:border-zinc-700">
                             @foreach ($this->roles as $role)
                                 <label class="flex items-center gap-2" wire:key="role-{{ $role->id }}">
-                                    <input type="checkbox" wire:model="selectedRoleIds" value="{{ $role->id }}" class="rounded border-zinc-300" />
+                                    <input type="checkbox" wire:model="selectedRoleIds" value="{{ $role->id }}" class="rounded border-zinc-300" @disabled($selectedUserIsLocked) />
                                     <span>{{ $role->name }}</span>
                                 </label>
                             @endforeach
@@ -61,7 +67,7 @@
                         <div class="mt-2 grid max-h-64 gap-2 overflow-y-auto rounded-md border border-zinc-200 p-3 dark:border-zinc-700">
                             @foreach ($this->permissions as $permission)
                                 <label class="flex items-center gap-2" wire:key="permission-{{ $permission->id }}">
-                                    <input type="checkbox" wire:model="selectedPermissionIds" value="{{ $permission->id }}" class="rounded border-zinc-300" />
+                                    <input type="checkbox" wire:model="selectedPermissionIds" value="{{ $permission->id }}" class="rounded border-zinc-300" @disabled($selectedUserIsLocked) />
                                     <span>{{ $permission->name }}</span>
                                 </label>
                             @endforeach
@@ -70,7 +76,7 @@
                         <flux:error name="selectedPermissionIds.*" />
                     </div>
 
-                    <flux:button type="submit" variant="primary">{{ __('Save Access') }}</flux:button>
+                    <flux:button type="submit" variant="primary" :disabled="$selectedUserIsLocked">{{ __('Save Access') }}</flux:button>
                 </form>
             @else
                 <div class="rounded-md border border-dashed border-zinc-300 p-6 text-center text-sm text-zinc-500 dark:border-zinc-700">
