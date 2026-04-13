@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -23,5 +24,23 @@ class DashboardTest extends TestCase
 
         $response = $this->get(route('dashboard'));
         $response->assertOk();
+    }
+
+    public function test_admin_dashboard_displays_procurement_reports_sections(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $admin = User::factory()->create();
+        $admin->assignRole('Admin');
+
+        $response = $this->actingAs($admin)->get(route('dashboard'));
+
+        $response
+            ->assertOk()
+            ->assertSee('Dashboard Summary')
+            ->assertSee('Vendor Report')
+            ->assertSee('RFQ Report')
+            ->assertSee('Purchase Report (PO)')
+            ->assertSee('Invoice Report');
     }
 }
