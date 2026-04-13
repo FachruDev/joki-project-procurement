@@ -4,6 +4,7 @@ namespace App\Livewire\Invoice;
 
 use App\InvoiceStatus;
 use App\Models\Invoice;
+use App\Notifications\InAppNotification;
 use Flux\Flux;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
@@ -57,6 +58,17 @@ class Approve extends Component
         $invoice->update([
             'status' => $status,
         ]);
+
+        $invoice->loadMissing('vendor.user', 'purchaseOrder');
+        $invoice->vendor->user?->notify(new InAppNotification(
+            title: $status === InvoiceStatus::Approved ? __('Invoice Approved') : __('Invoice Rejected'),
+            message: $status === InvoiceStatus::Approved
+                ? __('Your invoice for Purchase Order #:po has been approved.', ['po' => $invoice->po_id])
+                : __('Your invoice for Purchase Order #:po has been rejected. Please review and upload an updated invoice.', ['po' => $invoice->po_id]),
+            actionUrl: route('pos.show', $invoice->purchaseOrder, absolute: false),
+            actionLabel: __('View PO'),
+            variant: $status === InvoiceStatus::Approved ? 'success' : 'warning',
+        ));
 
         Flux::toast(variant: 'success', text: __('Invoice status has been updated.'));
     }

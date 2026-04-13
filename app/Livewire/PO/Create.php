@@ -5,6 +5,7 @@ namespace App\Livewire\PO;
 use App\Models\PurchaseOrder;
 use App\Models\Rfq;
 use App\Models\Vendor;
+use App\Notifications\InAppNotification;
 use App\PurchaseOrderStatus;
 use App\RfqStatus;
 use App\VendorStatus;
@@ -138,6 +139,17 @@ class Create extends Component
 
             return $purchaseOrder;
         });
+
+        $purchaseOrder->loadMissing('vendor.user');
+        $purchaseOrder->vendor->user?->notify(new InAppNotification(
+            title: __('New Purchase Order'),
+            message: __('Purchase Order #:po has been issued to your company.', [
+                'po' => $purchaseOrder->id,
+            ]),
+            actionUrl: route('pos.show', $purchaseOrder, absolute: false),
+            actionLabel: __('View PO'),
+            variant: 'success',
+        ));
 
         Flux::toast(variant: 'success', text: __('Purchase order created successfully.'));
 

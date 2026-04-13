@@ -5,6 +5,8 @@ namespace App\Livewire\Invoice;
 use App\InvoiceStatus;
 use App\Models\Invoice;
 use App\Models\PurchaseOrder;
+use App\Models\User;
+use App\Notifications\InAppNotification;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -59,6 +61,23 @@ class Upload extends Component
 
         $invoice->clearMediaCollection('invoice-files');
         $invoice->addMedia($validated['invoiceFile'])->toMediaCollection('invoice-files');
+
+        User::query()
+            ->permission('invoice.approve')
+            ->whereKeyNot(Auth::id())
+            ->get()
+            ->each(function (User $adminUser) use ($invoice, $vendor): void {
+                $adminUser->notify(new InAppNotification(
+                    title: __('Invoice Uploaded'),
+                    message: __('An invoice for Purchase Order #:po was uploaded by :company and is waiting for approval.', [
+                        'po' => $invoice->po_id,
+                        'company' => $vendor->company_name,
+                    ]),
+                    actionUrl: route('invoices.approve', absolute: false),
+                    actionLabel: __('Review Invoice'),
+                    variant: 'info',
+                ));
+            });
 
         $this->reset('invoiceFile');
 

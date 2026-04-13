@@ -4,6 +4,7 @@ namespace App\Livewire\GR;
 
 use App\Models\Delivery;
 use App\Models\PurchaseOrder;
+use App\Notifications\InAppNotification;
 use App\PurchaseOrderStatus;
 use Flux\Flux;
 use Illuminate\Support\Facades\Gate;
@@ -51,6 +52,17 @@ class Create extends Component
         $this->purchaseOrder->update([
             'status' => PurchaseOrderStatus::Completed,
         ]);
+
+        $this->purchaseOrder->loadMissing('vendor.user');
+        $this->purchaseOrder->vendor->user?->notify(new InAppNotification(
+            title: __('Goods Receipt Recorded'),
+            message: __('Goods receipt for Purchase Order #:po has been recorded.', [
+                'po' => $this->purchaseOrder->id,
+            ]),
+            actionUrl: route('pos.show', $this->purchaseOrder, absolute: false),
+            actionLabel: __('View PO'),
+            variant: 'info',
+        ));
 
         Flux::toast(variant: 'success', text: __('Goods receipt recorded.'));
 

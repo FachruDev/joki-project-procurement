@@ -18,6 +18,18 @@
             </div>
         </div>
         <flux:menu.separator />
+        <flux:menu.group :heading="__('Theme')">
+            <flux:menu.item icon="sun" x-on:click="$flux.appearance = 'light'">
+                {{ __('Light') }}
+            </flux:menu.item>
+            <flux:menu.item icon="moon" x-on:click="$flux.appearance = 'dark'">
+                {{ __('Dark') }}
+            </flux:menu.item>
+            <flux:menu.item icon="computer-desktop" x-on:click="$flux.appearance = 'system'">
+                {{ __('System') }}
+            </flux:menu.item>
+        </flux:menu.group>
+        <flux:menu.separator />
         <flux:menu.radio.group>
             <flux:menu.item :href="route('profile.edit')" icon="cog" wire:navigate>
                 {{ __('Settings') }}

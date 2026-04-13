@@ -4,6 +4,7 @@ namespace App\Livewire\RFQ;
 
 use App\Models\Rfq;
 use App\Models\Vendor;
+use App\Notifications\InAppNotification;
 use App\RfqStatus;
 use App\VendorStatus;
 use Flux\Flux;
@@ -75,6 +76,20 @@ class Create extends Component
 
             return $rfq;
         });
+
+        $rfq->loadMissing('vendors.user');
+        foreach ($rfq->vendors as $assignedVendor) {
+            $assignedVendor->user?->notify(new InAppNotification(
+                title: __('New RFQ Invitation'),
+                message: __('You are assigned to RFQ \":title\". Submit your response before :deadline.', [
+                    'title' => $rfq->title,
+                    'deadline' => $rfq->deadline?->format('Y-m-d H:i'),
+                ]),
+                actionUrl: route('rfqs.respond', $rfq, absolute: false),
+                actionLabel: __('Submit Response'),
+                variant: 'info',
+            ));
+        }
 
         Flux::toast(variant: 'success', text: __('RFQ created successfully.'));
 

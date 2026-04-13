@@ -4,6 +4,7 @@ namespace App\Livewire\RFQ;
 
 use App\Models\Rfq;
 use App\Models\RfqResponse;
+use App\Notifications\InAppNotification;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -89,6 +90,21 @@ class Respond extends Component
             'price' => $validated['price'],
             'notes' => $validated['notes'] ?? null,
         ]);
+
+        $this->rfq->loadMissing('creator');
+        if ($this->rfq->creator !== null && ! $this->rfq->creator->is($vendor->user)) {
+            $this->rfq->creator->notify(new InAppNotification(
+                title: __('RFQ Response Received'),
+                message: __(':company submitted a response for RFQ \":title\" with price :price.', [
+                    'company' => $vendor->company_name,
+                    'title' => $this->rfq->title,
+                    'price' => number_format((float) $validated['price'], 2),
+                ]),
+                actionUrl: route('rfqs.show', $this->rfq, absolute: false),
+                actionLabel: __('Review RFQ'),
+                variant: 'info',
+            ));
+        }
 
         $this->alreadySubmitted = true;
 

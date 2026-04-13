@@ -3,6 +3,7 @@
 namespace App\Livewire\Vendor;
 
 use App\Models\Vendor;
+use App\Notifications\InAppNotification;
 use App\VendorStatus;
 use Flux\Flux;
 use Illuminate\Support\Collection;
@@ -38,6 +39,17 @@ class Register extends Component
             'status' => VendorStatus::Approved,
         ]);
 
+        $vendor->loadMissing('user');
+        $vendor->user?->notify(new InAppNotification(
+            title: __('Vendor Approved'),
+            message: __('Your vendor profile for :company has been approved. You can now respond to RFQs and upload invoices.', [
+                'company' => $vendor->company_name,
+            ]),
+            actionUrl: route('dashboard', absolute: false),
+            actionLabel: __('Open Dashboard'),
+            variant: 'success',
+        ));
+
         Flux::toast(variant: 'success', text: __('Vendor approved successfully.'));
     }
 
@@ -53,6 +65,17 @@ class Register extends Component
         $vendor->update([
             'status' => VendorStatus::Rejected,
         ]);
+
+        $vendor->loadMissing('user');
+        $vendor->user?->notify(new InAppNotification(
+            title: __('Vendor Rejected'),
+            message: __('Your vendor profile for :company was rejected. Please update your profile and documents, then resubmit.', [
+                'company' => $vendor->company_name,
+            ]),
+            actionUrl: route('vendor.profile', absolute: false),
+            actionLabel: __('Update Profile'),
+            variant: 'warning',
+        ));
 
         Flux::toast(variant: 'warning', text: __('Vendor rejected.'));
     }

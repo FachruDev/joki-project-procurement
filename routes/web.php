@@ -1,5 +1,7 @@
 <?php
 
+use App\Livewire\Admin\PermissionManagement;
+use App\Livewire\Admin\UserManagement;
 use App\Livewire\GR\Create as GrCreate;
 use App\Livewire\Invoice\Approve as InvoiceApprove;
 use App\Livewire\Invoice\Upload as InvoiceUpload;
@@ -19,6 +21,14 @@ Route::view('/', 'welcome')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('dashboard', Dashboard::class)->name('dashboard');
+
+    Route::livewire('management/users', UserManagement::class)
+        ->middleware('permission:user.manage')
+        ->name('management.users');
+
+    Route::livewire('management/permissions', PermissionManagement::class)
+        ->middleware('permission:permission.manage')
+        ->name('management.permissions');
 
     Route::livewire('vendors', VendorRegister::class)
         ->middleware('can:vendor.manage')

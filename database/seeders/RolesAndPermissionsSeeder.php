@@ -29,6 +29,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'gr.create',
             'invoice.upload',
             'invoice.approve',
+            'user.manage',
+            'permission.manage',
         ];
 
         foreach ($permissions as $permission) {

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         @include('partials.head')
     </head>
@@ -7,40 +7,63 @@
         <flux:sidebar sticky collapsible="mobile" class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
             <flux:sidebar.header>
                 <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
+
+                <flux:spacer />
+
+                <div class="hidden lg:block">
+                    <livewire:notifications.center :compact="true" key="notif-desktop" />
+                </div>
+
                 <flux:sidebar.collapse class="lg:hidden" />
             </flux:sidebar.header>
 
             <flux:sidebar.nav>
-                <flux:sidebar.group :heading="__('Main')" class="grid">
-                    <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
+                <flux:sidebar.group icon="home" :heading="__('Main')" expandable :expanded="request()->routeIs('dashboard')">
+                    <flux:sidebar.item :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
                         {{ __('Dashboard') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
 
+                @if (auth()->user()->can('user.manage') || auth()->user()->can('permission.manage'))
+                    <flux:sidebar.group icon="shield-check" :heading="__('Administration')" expandable :expanded="request()->routeIs('management.*')">
+                        @can('user.manage')
+                            <flux:sidebar.item :href="route('management.users')" :current="request()->routeIs('management.users')" wire:navigate>
+                                {{ __('User Management') }}
+                            </flux:sidebar.item>
+                        @endcan
+
+                        @can('permission.manage')
+                            <flux:sidebar.item :href="route('management.permissions')" :current="request()->routeIs('management.permissions')" wire:navigate>
+                                {{ __('Role & Permission') }}
+                            </flux:sidebar.item>
+                        @endcan
+                    </flux:sidebar.group>
+                @endif
+
                 @can('vendor.manage')
-                    <flux:sidebar.group :heading="__('Vendor')" class="grid">
-                        <flux:sidebar.item icon="users" :href="route('vendor.register')" :current="request()->routeIs('vendor.register')" wire:navigate>
+                    <flux:sidebar.group icon="users" :heading="__('Vendor')" expandable :expanded="request()->routeIs('vendor.register')">
+                        <flux:sidebar.item :href="route('vendor.register')" :current="request()->routeIs('vendor.register')" wire:navigate>
                             {{ __('Vendor Review') }}
                         </flux:sidebar.item>
                     </flux:sidebar.group>
                 @endcan
 
                 @can('rfq.respond')
-                    <flux:sidebar.group :heading="__('My Vendor')" class="grid">
-                        <flux:sidebar.item icon="identification" :href="route('vendor.profile')" :current="request()->routeIs('vendor.profile')" wire:navigate>
+                    <flux:sidebar.group icon="identification" :heading="__('My Vendor')" expandable :expanded="request()->routeIs('vendor.profile')">
+                        <flux:sidebar.item :href="route('vendor.profile')" :current="request()->routeIs('vendor.profile')" wire:navigate>
                             {{ __('Vendor Profile') }}
                         </flux:sidebar.item>
                     </flux:sidebar.group>
                 @endcan
 
                 @can('rfq.view')
-                    <flux:sidebar.group :heading="__('RFQ')" class="grid">
-                        <flux:sidebar.item icon="document-text" :href="route('rfqs.index')" :current="request()->routeIs('rfqs.index')" wire:navigate>
+                    <flux:sidebar.group icon="document-text" :heading="__('RFQ')" expandable :expanded="request()->routeIs('rfqs.*')">
+                        <flux:sidebar.item :href="route('rfqs.index')" :current="request()->routeIs('rfqs.index')" wire:navigate>
                             {{ __('RFQ List') }}
                         </flux:sidebar.item>
 
                         @can('rfq.create')
-                            <flux:sidebar.item icon="plus-circle" :href="route('rfqs.create')" :current="request()->routeIs('rfqs.create')" wire:navigate>
+                            <flux:sidebar.item :href="route('rfqs.create')" :current="request()->routeIs('rfqs.create')" wire:navigate>
                                 {{ __('Create RFQ') }}
                             </flux:sidebar.item>
                         @endcan
@@ -48,26 +71,28 @@
                 @endcan
 
                 @can('po.view')
-                    <flux:sidebar.group :heading="__('Purchase Orders')" class="grid">
-                        <flux:sidebar.item icon="shopping-cart" :href="route('pos.index')" :current="request()->routeIs('pos.index')" wire:navigate>
+                    <flux:sidebar.group icon="shopping-cart" :heading="__('Purchase Orders')" expandable :expanded="request()->routeIs('pos.*') || request()->routeIs('gr.create')">
+                        <flux:sidebar.item :href="route('pos.index')" :current="request()->routeIs('pos.index')" wire:navigate>
                             {{ __('PO List') }}
                         </flux:sidebar.item>
 
                         @can('po.create')
-                            <flux:sidebar.item icon="plus-circle" :href="route('pos.create')" :current="request()->routeIs('pos.create')" wire:navigate>
+                            <flux:sidebar.item :href="route('pos.create')" :current="request()->routeIs('pos.create')" wire:navigate>
                                 {{ __('Create PO') }}
                             </flux:sidebar.item>
                         @endcan
                     </flux:sidebar.group>
                 @endcan
 
-                @can('invoice.approve')
-                    <flux:sidebar.group :heading="__('Invoices')" class="grid">
-                        <flux:sidebar.item icon="check-circle" :href="route('invoices.approve')" :current="request()->routeIs('invoices.approve')" wire:navigate>
-                            {{ __('Invoice Approval') }}
-                        </flux:sidebar.item>
+                @if (auth()->user()->can('invoice.approve') || auth()->user()->can('invoice.upload'))
+                    <flux:sidebar.group icon="receipt-percent" :heading="__('Invoices')" expandable :expanded="request()->routeIs('invoices.*')">
+                        @can('invoice.approve')
+                            <flux:sidebar.item :href="route('invoices.approve')" :current="request()->routeIs('invoices.approve')" wire:navigate>
+                                {{ __('Invoice Approval') }}
+                            </flux:sidebar.item>
+                        @endcan
                     </flux:sidebar.group>
-                @endcan
+                @endif
             </flux:sidebar.nav>
 
             <flux:spacer />
@@ -80,6 +105,8 @@
             <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
 
             <flux:spacer />
+
+            <livewire:notifications.center :compact="true" key="notif-mobile" />
 
             <flux:dropdown position="top" align="end">
                 <flux:profile
@@ -103,6 +130,20 @@
                             </div>
                         </div>
                     </flux:menu.radio.group>
+
+                    <flux:menu.separator />
+
+                    <flux:menu.group :heading="__('Theme')">
+                        <flux:menu.item icon="sun" x-on:click="$flux.appearance = 'light'">
+                            {{ __('Light') }}
+                        </flux:menu.item>
+                        <flux:menu.item icon="moon" x-on:click="$flux.appearance = 'dark'">
+                            {{ __('Dark') }}
+                        </flux:menu.item>
+                        <flux:menu.item icon="computer-desktop" x-on:click="$flux.appearance = 'system'">
+                            {{ __('System') }}
+                        </flux:menu.item>
+                    </flux:menu.group>
 
                     <flux:menu.separator />
 

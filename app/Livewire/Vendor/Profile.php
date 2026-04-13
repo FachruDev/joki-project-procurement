@@ -2,7 +2,9 @@
 
 namespace App\Livewire\Vendor;
 
+use App\Models\User;
 use App\Models\Vendor;
+use App\Notifications\InAppNotification;
 use App\VendorStatus;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
@@ -98,6 +100,23 @@ class Profile extends Component
         ]);
 
         $document->addMedia($validated['documentFile'])->toMediaCollection('documents');
+
+        User::query()
+            ->permission('vendor.approve')
+            ->whereKeyNot(Auth::id())
+            ->get()
+            ->each(function (User $adminUser) use ($vendor, $document): void {
+                $adminUser->notify(new InAppNotification(
+                    title: __('Vendor Document Uploaded'),
+                    message: __(':company uploaded a :document_type document and is ready for review.', [
+                        'company' => $vendor->company_name,
+                        'document_type' => $document->document_type,
+                    ]),
+                    actionUrl: route('vendor.register', absolute: false),
+                    actionLabel: __('Review Vendor'),
+                    variant: 'info',
+                ));
+            });
 
         $this->reset('documentType', 'documentFile');
 

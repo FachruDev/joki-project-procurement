@@ -27,6 +27,8 @@ class RolesAndPermissionsSeederTest extends TestCase
             'gr.create',
             'invoice.upload',
             'invoice.approve',
+            'user.manage',
+            'permission.manage',
         ];
 
         foreach ($permissions as $permission) {
@@ -39,6 +41,7 @@ class RolesAndPermissionsSeederTest extends TestCase
 
         $this->assertCount(count($permissions), $admin->permissions);
         $this->assertTrue($admin->hasPermissionTo('invoice.approve'));
+        $this->assertTrue($admin->hasPermissionTo('user.manage'));
         $this->assertTrue($procurement->hasPermissionTo('po.create'));
         $this->assertFalse($procurement->hasPermissionTo('invoice.approve'));
         $this->assertTrue($vendor->hasPermissionTo('invoice.upload'));
