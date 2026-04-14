@@ -47,7 +47,14 @@
                     </flux:callout>
                 @endif
 
-                <form wire:submit="saveAssignments" class="space-y-5">
+                <form
+                    wire:submit="saveAssignments"
+                    class="space-y-5"
+                    data-swal-confirm
+                    data-swal-title="Simpan Akses User?"
+                    data-swal-text="Role dan permission user ini akan diperbarui."
+                    data-swal-icon="question"
+                >
                     <div>
                         <flux:label>{{ __('Roles') }}</flux:label>
                         <div class="mt-2 grid gap-2 rounded-md border border-zinc-200 p-3 dark:border-zinc-700">

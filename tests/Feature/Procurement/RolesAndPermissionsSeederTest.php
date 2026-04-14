@@ -28,6 +28,7 @@ class RolesAndPermissionsSeederTest extends TestCase
             'gr.create',
             'invoice.upload',
             'invoice.approve',
+            'report.vendor.summary',
             'user.manage',
             'permission.manage',
         ];
@@ -47,9 +48,11 @@ class RolesAndPermissionsSeederTest extends TestCase
         $this->assertTrue($admin->hasPermissionTo('user.manage'));
         $this->assertTrue($superAdmin->hasPermissionTo('permission.manage'));
         $this->assertTrue($procurement->hasPermissionTo('po.create'));
+        $this->assertTrue($procurement->hasPermissionTo('report.vendor.summary'));
         $this->assertFalse($procurement->hasPermissionTo('invoice.approve'));
         $this->assertTrue($vendor->hasPermissionTo('invoice.upload'));
         $this->assertFalse($vendor->hasPermissionTo('vendor.approve'));
+        $this->assertFalse($vendor->hasPermissionTo('report.vendor.summary'));
 
         $superAdminUser = User::query()->where('email', 'superadmin@procurement.test')->first();
 

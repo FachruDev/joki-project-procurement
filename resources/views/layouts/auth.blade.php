@@ -20,8 +20,8 @@
                         <a href="{{ route('home') }}" class="inline-flex items-center gap-3" wire:navigate>
                             <x-app-logo-icon class="h-11 w-11 rounded-xl object-contain" />
                             <div>
-                                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400">Procurement Platform</p>
-                                <p class="text-xl font-semibold text-zinc-900 dark:text-zinc-100">ProChain</p>
+                                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400">Vendor Procurement Platform</p>
+                                <p class="text-xl font-semibold text-zinc-900 dark:text-zinc-100">APK Vendor</p>
                             </div>
                         </a>
 
@@ -53,7 +53,7 @@
                     <div class="mx-auto w-full max-w-2xl rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 sm:p-8">
                         <a href="{{ route('home') }}" class="mb-6 flex items-center gap-3 lg:hidden" wire:navigate>
                             <x-app-logo-icon class="h-10 w-10 rounded-lg object-contain" />
-                            <span class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">ProChain</span>
+                            <span class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">APK Vendor</span>
                         </a>
 
                         {{ $slot }}

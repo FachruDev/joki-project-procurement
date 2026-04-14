@@ -1,7 +1,7 @@
 <x-layouts::auth :title="__('Register')">
     <div class="space-y-6">
         <div class="space-y-1">
-            <flux:heading size="xl">{{ __('Create ProChain Vendor Account') }}</flux:heading>
+            <flux:heading size="xl">{{ __('Create APK Vendor Account') }}</flux:heading>
             <flux:text class="text-zinc-600 dark:text-zinc-300">
                 {{ __('Register your account and vendor profile to join the procurement process.') }}
             </flux:text>
@@ -99,7 +99,7 @@
 
             <div class="flex items-center justify-end">
                 <flux:button type="submit" variant="primary" class="w-full" data-test="register-user-button">
-                    {{ __('Create ProChain Account') }}
+                    {{ __('Create APK Vendor Account') }}
                 </flux:button>
             </div>
         </form>

@@ -15,7 +15,11 @@
 
                 @can('rfq.create')
                     @if ($rfq->status->value === 'open')
-                        <flux:button wire:click="closeRfq">{{ __('Close RFQ') }}</flux:button>
+                        <flux:button
+                            x-on:click.prevent="(async () => { if (await window.swalConfirmDialog({ title: 'Close RFQ?', text: 'RFQ akan ditutup dan tidak menerima respons baru.' })) { $wire.closeRfq() } })()"
+                        >
+                            {{ __('Close RFQ') }}
+                        </flux:button>
                     @endif
                 @endcan
             </div>
@@ -74,7 +78,10 @@
                         <flux:error name="selectedVendorId" />
                     </flux:field>
 
-                    <flux:button variant="primary" wire:click="createPurchaseOrder">
+                    <flux:button
+                        variant="primary"
+                        x-on:click.prevent="(async () => { if (await window.swalConfirmDialog({ title: 'Create Purchase Order?', text: 'PO baru akan dibuat dari RFQ ini.' })) { $wire.createPurchaseOrder() } })()"
+                    >
                         {{ __('Create PO') }}
                     </flux:button>
                 </div>

@@ -51,10 +51,18 @@
                             </td>
                             <td class="px-4 py-3 text-right">
                                 <div class="flex justify-end gap-2">
-                                    <flux:button size="sm" variant="primary" wire:click="approve({{ $invoice->id }})">
+                                    <flux:button
+                                        size="sm"
+                                        variant="primary"
+                                        x-on:click.prevent="(async () => { if (await window.swalConfirmDialog({ title: 'Approve Invoice', text: 'Status invoice akan diubah menjadi approved.' })) { $wire.approve({{ $invoice->id }}) } })()"
+                                    >
                                         {{ __('Approve') }}
                                     </flux:button>
-                                    <flux:button size="sm" variant="danger" wire:click="reject({{ $invoice->id }})">
+                                    <flux:button
+                                        size="sm"
+                                        variant="danger"
+                                        x-on:click.prevent="(async () => { if (await window.swalConfirmDialog({ title: 'Reject Invoice', text: 'Status invoice akan diubah menjadi rejected.', confirmButtonText: 'Ya, reject' })) { $wire.reject({{ $invoice->id }}) } })()"
+                                    >
                                         {{ __('Reject') }}
                                     </flux:button>
                                 </div>

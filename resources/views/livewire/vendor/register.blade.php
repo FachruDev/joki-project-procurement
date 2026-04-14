@@ -48,10 +48,18 @@
                             <td class="px-4 py-3 text-right">
                                 <div class="flex justify-end gap-2">
                                     @can('vendor.approve')
-                                        <flux:button size="sm" variant="primary" wire:click="approve({{ $vendor->id }})">
+                                        <flux:button
+                                            size="sm"
+                                            variant="primary"
+                                            x-on:click.prevent="(async () => { if (await window.swalConfirmDialog({ title: 'Approve Vendor', text: 'Vendor ini akan mendapatkan akses penuh sebagai vendor approved.' })) { $wire.approve({{ $vendor->id }}) } })()"
+                                        >
                                             {{ __('Approve') }}
                                         </flux:button>
-                                        <flux:button size="sm" variant="danger" wire:click="reject({{ $vendor->id }})">
+                                        <flux:button
+                                            size="sm"
+                                            variant="danger"
+                                            x-on:click.prevent="(async () => { if (await window.swalConfirmDialog({ title: 'Reject Vendor', text: 'Vendor ini akan ditandai sebagai rejected.', icon: 'warning', confirmButtonText: 'Ya, reject' })) { $wire.reject({{ $vendor->id }}) } })()"
+                                        >
                                             {{ __('Reject') }}
                                         </flux:button>
                                     @endcan

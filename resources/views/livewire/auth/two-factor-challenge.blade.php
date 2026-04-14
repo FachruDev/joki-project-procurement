@@ -2,7 +2,7 @@
     <div class="space-y-6">
         <div class="space-y-1">
             <flux:heading size="xl">{{ __('Two-Factor Authentication') }}</flux:heading>
-            <flux:text class="text-zinc-600 dark:text-zinc-300">{{ __('Complete verification to secure access to ProChain.') }}</flux:text>
+            <flux:text class="text-zinc-600 dark:text-zinc-300">{{ __('Complete verification to secure access to APK Vendor.') }}</flux:text>
         </div>
 
         <div

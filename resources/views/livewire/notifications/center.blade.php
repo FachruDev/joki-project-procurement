@@ -56,7 +56,11 @@
                                 </button>
                             @endif
 
-                            <button type="button" wire:click="deleteNotification('{{ $notification->id }}')" class="text-red-600 hover:underline dark:text-red-400">
+                            <button
+                                type="button"
+                                class="text-red-600 hover:underline dark:text-red-400"
+                                x-on:click.prevent="(async () => { if (await window.swalConfirmDialog({ title: 'Hapus Notifikasi?', text: 'Notifikasi ini akan dihapus dari daftar Anda.', confirmButtonText: 'Ya, hapus' })) { $wire.deleteNotification('{{ $notification->id }}') } })()"
+                            >
                                 {{ __('Delete') }}
                             </button>
                         </div>

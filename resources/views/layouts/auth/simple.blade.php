@@ -10,7 +10,7 @@
                     <span class="flex h-9 w-9 mb-1 items-center justify-center rounded-md">
                         <x-app-logo-icon class="size-9 rounded-md object-contain" />
                     </span>
-                    <span class="text-sm font-semibold tracking-tight">ProChain</span>
+                    <span class="text-sm font-semibold tracking-tight">APK Vendor</span>
                 </a>
                 <div class="flex flex-col gap-6">
                     {{ $slot }}

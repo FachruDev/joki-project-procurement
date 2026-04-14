@@ -4,7 +4,14 @@
             <flux:text class="mt-1">{{ __('Create a request and assign approved vendors.') }}</flux:text>
         </div>
 
-        <form wire:submit="save" class="space-y-5 rounded-lg border border-zinc-200 p-5 dark:border-zinc-700">
+        <form
+            wire:submit="save"
+            class="space-y-5 rounded-lg border border-zinc-200 p-5 dark:border-zinc-700"
+            data-swal-confirm
+            data-swal-title="Simpan RFQ Baru?"
+            data-swal-text="RFQ akan dipublikasikan ke vendor terpilih."
+            data-swal-icon="question"
+        >
             <flux:field>
                 <flux:label>{{ __('Title') }}</flux:label>
                 <flux:input wire:model="title" type="text" />

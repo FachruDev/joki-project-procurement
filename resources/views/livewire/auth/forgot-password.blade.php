@@ -1,7 +1,7 @@
 <x-layouts::auth :title="__('Forgot password')">
     <div class="space-y-6">
         <div class="space-y-1">
-            <flux:heading size="xl">{{ __('Reset ProChain Password') }}</flux:heading>
+            <flux:heading size="xl">{{ __('Reset APK Vendor Password') }}</flux:heading>
             <flux:text class="text-zinc-600 dark:text-zinc-300">{{ __('Enter your email and we will send a secure reset link.') }}</flux:text>
         </div>
 

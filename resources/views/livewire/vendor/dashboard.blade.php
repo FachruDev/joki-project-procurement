@@ -1,10 +1,11 @@
 <section class="space-y-8">
-    <div class="relative overflow-hidden rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-        <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(6,182,212,0.18),_transparent_45%)] dark:bg-[radial-gradient(circle_at_top_right,_rgba(14,116,144,0.35),_transparent_45%)]"></div>
+    <div class="relative overflow-hidden rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(6,182,212,0.22),_transparent_45%)] dark:bg-[radial-gradient(circle_at_top_right,_rgba(14,116,144,0.35),_transparent_45%)]"></div>
+        <div class="pointer-events-none absolute -left-20 bottom-0 h-52 w-52 rounded-full bg-emerald-300/20 blur-3xl dark:bg-emerald-500/15"></div>
 
         <div class="relative flex flex-wrap items-start justify-between gap-5">
             <div class="space-y-2">
-                <flux:heading size="xl">{{ __('ProChain Dashboard') }}</flux:heading>
+                <flux:heading size="xl">{{ __('APK Vendor Dashboard') }}</flux:heading>
                 <flux:text class="max-w-2xl text-zinc-600 dark:text-zinc-300">
                     {{ __('Operational landing page for procurement reporting: vendor lifecycle, RFQ pipeline, purchase activity, and invoice monitoring.') }}
                 </flux:text>
@@ -40,68 +41,80 @@
             <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('Landing KPI overview') }}</flux:text>
         </div>
 
-        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-            <div class="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-                <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('Total Vendor') }}</flux:text>
-                <flux:heading class="mt-2" size="xl">{{ $totalVendors }}</flux:heading>
-            </div>
+        @php
+            $summaryGridClass = $canViewVendorSummary ? 'sm:grid-cols-2 xl:grid-cols-5' : 'sm:grid-cols-2 xl:grid-cols-3';
+        @endphp
 
-            <div class="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-                <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('Vendor Approved vs Pending') }}</flux:text>
-                <div class="mt-2 flex items-end gap-2">
-                    <flux:heading size="xl">{{ $approvedVendorsCount }}</flux:heading>
-                    <flux:text class="pb-1 text-zinc-500 dark:text-zinc-400">{{ __('approved') }}</flux:text>
+        <div class="grid gap-4 {{ $summaryGridClass }}">
+            @if ($canViewVendorSummary)
+                <div class="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+                    <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('Total Vendor') }}</flux:text>
+                    <flux:heading class="mt-2" size="xl">{{ $totalVendors }}</flux:heading>
                 </div>
-                <flux:text class="mt-1 text-xs text-amber-600 dark:text-amber-400">{{ $pendingVendorsCount }} {{ __('pending') }}</flux:text>
-            </div>
 
-            <div class="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+                <div class="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+                    <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('Vendor Approved vs Pending') }}</flux:text>
+                    <div class="mt-2 flex items-end gap-2">
+                        <flux:heading size="xl">{{ $approvedVendorsCount }}</flux:heading>
+                        <flux:text class="pb-1 text-zinc-500 dark:text-zinc-400">{{ __('approved') }}</flux:text>
+                    </div>
+                    <flux:text class="mt-1 text-xs text-amber-600 dark:text-amber-400">{{ $pendingVendorsCount }} {{ __('pending') }}</flux:text>
+                </div>
+            @endif
+
+            <div class="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
                 <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('RFQ Aktif') }}</flux:text>
                 <flux:heading class="mt-2" size="xl">{{ $activeRfqsCount }}</flux:heading>
             </div>
 
-            <div class="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+            <div class="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
                 <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('PO Aktif') }}</flux:text>
                 <flux:heading class="mt-2" size="xl">{{ $activePoCount }}</flux:heading>
             </div>
 
-            <div class="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+            <div class="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
                 <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('Invoice Pending') }}</flux:text>
                 <flux:heading class="mt-2" size="xl">{{ $pendingInvoicesCount }}</flux:heading>
             </div>
         </div>
     </section>
 
-    <section class="grid gap-4 xl:grid-cols-5">
-        <div class="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900 xl:col-span-2">
-            <div class="flex items-center justify-between">
-                <flux:heading>{{ __('Vendor Status Chart') }}</flux:heading>
-                <flux:text class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Approved / Pending / Rejected') }}</flux:text>
-            </div>
+    @php
+        $chartGridClass = $canViewVendorSummary ? 'xl:grid-cols-5' : 'xl:grid-cols-1';
+    @endphp
 
-            <div class="mt-5 flex items-center gap-6">
-                <div class="relative h-28 w-28 rounded-full" style="background: {{ $vendorStatusChart['background'] }};">
-                    <div class="absolute inset-4 rounded-full bg-white dark:bg-zinc-900"></div>
+    <section class="grid gap-4 {{ $chartGridClass }}">
+        @if ($canViewVendorSummary)
+            <div class="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 xl:col-span-2">
+                <div class="flex items-center justify-between">
+                    <flux:heading>{{ __('Vendor Status Chart') }}</flux:heading>
+                    <flux:text class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Approved / Pending / Rejected') }}</flux:text>
                 </div>
 
-                <div class="space-y-2 text-sm">
-                    <div class="flex items-center gap-2">
-                        <span class="inline-block h-2.5 w-2.5 rounded-full bg-green-600"></span>
-                        <span>{{ __('Approved') }}: {{ $approvedVendorsCount }} ({{ $vendorStatusChart['approved_percent'] }}%)</span>
+                <div class="mt-5 flex items-center gap-6">
+                    <div class="relative h-28 w-28 rounded-full" style="background: {{ $vendorStatusChart['background'] }};">
+                        <div class="absolute inset-4 rounded-full bg-white dark:bg-zinc-900"></div>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <span class="inline-block h-2.5 w-2.5 rounded-full bg-amber-500"></span>
-                        <span>{{ __('Pending') }}: {{ $pendingVendorsCount }} ({{ $vendorStatusChart['pending_percent'] }}%)</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="inline-block h-2.5 w-2.5 rounded-full bg-red-500"></span>
-                        <span>{{ __('Rejected') }}: {{ $totalVendors - $approvedVendorsCount - $pendingVendorsCount }} ({{ $vendorStatusChart['rejected_percent'] }}%)</span>
+
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center gap-2">
+                            <span class="inline-block h-2.5 w-2.5 rounded-full bg-green-600"></span>
+                            <span>{{ __('Approved') }}: {{ $approvedVendorsCount }} ({{ $vendorStatusChart['approved_percent'] }}%)</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="inline-block h-2.5 w-2.5 rounded-full bg-amber-500"></span>
+                            <span>{{ __('Pending') }}: {{ $pendingVendorsCount }} ({{ $vendorStatusChart['pending_percent'] }}%)</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="inline-block h-2.5 w-2.5 rounded-full bg-red-500"></span>
+                            <span>{{ __('Rejected') }}: {{ $totalVendors - $approvedVendorsCount - $pendingVendorsCount }} ({{ $vendorStatusChart['rejected_percent'] }}%)</span>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        @endif
 
-        <div class="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900 xl:col-span-3">
+        <div class="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 {{ $canViewVendorSummary ? 'xl:col-span-3' : 'xl:col-span-1' }}">
             <div class="flex items-center justify-between">
                 <flux:heading>{{ __('Operational Volume Chart') }}</flux:heading>
                 <flux:text class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Relative current workload') }}</flux:text>

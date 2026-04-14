@@ -2,7 +2,7 @@
     <div class="space-y-6">
         <div class="space-y-1">
             <flux:heading size="xl">{{ __('Confirm Password') }}</flux:heading>
-            <flux:text class="text-zinc-600 dark:text-zinc-300">{{ __('This is a secure ProChain area. Re-enter your password to continue.') }}</flux:text>
+            <flux:text class="text-zinc-600 dark:text-zinc-300">{{ __('This is a secure APK Vendor area. Re-enter your password to continue.') }}</flux:text>
         </div>
 
         <x-auth-session-status class="text-center" :status="session('status')" />

@@ -7,7 +7,14 @@
     <div class="grid gap-6 lg:grid-cols-2">
         <div class="space-y-4 rounded-lg border border-zinc-200 p-5 dark:border-zinc-700">
             <flux:heading>{{ __('Create Permission') }}</flux:heading>
-            <form wire:submit="createPermission" class="space-y-3">
+            <form
+                wire:submit="createPermission"
+                class="space-y-3"
+                data-swal-confirm
+                data-swal-title="Create Permission?"
+                data-swal-text="Permission baru akan ditambahkan ke sistem."
+                data-swal-icon="question"
+            >
                 <flux:field>
                     <flux:label>{{ __('Permission Name') }}</flux:label>
                     <flux:input wire:model="permissionName" type="text" placeholder="example: user.manage" />
@@ -20,7 +27,14 @@
             <flux:separator />
 
             <flux:heading>{{ __('Create Role') }}</flux:heading>
-            <form wire:submit="createRole" class="space-y-3">
+            <form
+                wire:submit="createRole"
+                class="space-y-3"
+                data-swal-confirm
+                data-swal-title="Create Role?"
+                data-swal-text="Role baru akan ditambahkan ke sistem."
+                data-swal-icon="question"
+            >
                 <flux:field>
                     <flux:label>{{ __('Role Name') }}</flux:label>
                     <flux:input wire:model="roleName" type="text" placeholder="example: Supervisor" />
@@ -52,7 +66,14 @@
                     </flux:callout>
                 @endif
 
-                <form wire:submit="saveRolePermissions" class="space-y-4">
+                <form
+                    wire:submit="saveRolePermissions"
+                    class="space-y-4"
+                    data-swal-confirm
+                    data-swal-title="Simpan Mapping Role?"
+                    data-swal-text="Perubahan permission pada role ini akan disimpan."
+                    data-swal-icon="question"
+                >
                     <div class="grid max-h-72 gap-2 overflow-y-auto rounded-md border border-zinc-200 p-3 dark:border-zinc-700">
                         @foreach ($this->permissions as $permission)
                             <label class="flex items-center gap-2" wire:key="map-permission-{{ $permission->id }}">

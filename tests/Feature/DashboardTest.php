@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Models\Vendor;
+use App\VendorStatus;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -63,5 +65,25 @@ class DashboardTest extends TestCase
         $response = $this->actingAs($procurement)->get(route('dashboard'));
 
         $response->assertOk()->assertSee('RFQ List');
+    }
+
+    public function test_vendor_cannot_see_vendor_summary_cards_without_permission(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $vendorUser = User::factory()->create();
+        $vendorUser->assignRole('Vendor');
+
+        Vendor::factory()->create([
+            'user_id' => $vendorUser->id,
+            'status' => VendorStatus::Approved,
+        ]);
+
+        $response = $this->actingAs($vendorUser)->get(route('dashboard'));
+
+        $response
+            ->assertOk()
+            ->assertDontSee('Total Vendor')
+            ->assertDontSee('Vendor Approved vs Pending');
     }
 }

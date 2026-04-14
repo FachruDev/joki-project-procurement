@@ -4,7 +4,14 @@
             <flux:text class="mt-1">{{ __('Purchase Order #') }}{{ $purchaseOrder->id }}</flux:text>
         </div>
 
-        <form wire:submit="save" class="space-y-4 rounded-lg border border-zinc-200 p-5 dark:border-zinc-700">
+        <form
+            wire:submit="save"
+            class="space-y-4 rounded-lg border border-zinc-200 p-5 dark:border-zinc-700"
+            data-swal-confirm
+            data-swal-title="Simpan Goods Receipt?"
+            data-swal-text="Penerimaan barang akan dicatat pada purchase order ini."
+            data-swal-icon="question"
+        >
             <flux:field>
                 <flux:label>{{ __('Received Date') }}</flux:label>
                 <flux:input wire:model="receivedDate" type="datetime-local" />

@@ -1,5 +1,5 @@
 <img
     src="{{ asset('img/prochain.png') }}"
-    alt="{{ __('ProChain') }}"
+    alt="{{ __('APK Vendor') }}"
     {{ $attributes }}
 />

@@ -34,7 +34,16 @@
             <flux:menu.item :href="route('profile.edit')" icon="cog" wire:navigate>
                 {{ __('Settings') }}
             </flux:menu.item>
-            <form method="POST" action="{{ route('logout') }}" class="w-full">
+            <form
+                method="POST"
+                action="{{ route('logout') }}"
+                class="w-full"
+                data-swal-confirm
+                data-swal-title="Log out?"
+                data-swal-text="Anda akan keluar dari sesi aplikasi."
+                data-swal-icon="question"
+                data-swal-confirm-text="Ya, keluar"
+            >
                 @csrf
                 <flux:menu.item
                     as="button"

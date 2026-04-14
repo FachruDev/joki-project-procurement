@@ -15,7 +15,14 @@
             </div>
         </flux:callout>
 
-        <form wire:submit="saveProfile" class="space-y-4 rounded-lg border border-zinc-200 p-5 dark:border-zinc-700">
+        <form
+            wire:submit="saveProfile"
+            class="space-y-4 rounded-lg border border-zinc-200 p-5 dark:border-zinc-700"
+            data-swal-confirm
+            data-swal-title="Simpan Profil Vendor?"
+            data-swal-text="Perubahan profil perusahaan akan disimpan."
+            data-swal-icon="question"
+        >
             <flux:heading>{{ __('Company Details') }}</flux:heading>
 
             <flux:field>
@@ -39,7 +46,14 @@
             <flux:button type="submit" variant="primary">{{ __('Save Profile') }}</flux:button>
         </form>
 
-        <form wire:submit="uploadDocument" class="space-y-4 rounded-lg border border-zinc-200 p-5 dark:border-zinc-700">
+        <form
+            wire:submit="uploadDocument"
+            class="space-y-4 rounded-lg border border-zinc-200 p-5 dark:border-zinc-700"
+            data-swal-confirm
+            data-swal-title="Upload Dokumen Vendor?"
+            data-swal-text="Pastikan dokumen yang diunggah sudah benar."
+            data-swal-icon="question"
+        >
             <flux:heading>{{ __('Upload Vendor Document') }}</flux:heading>
 
             <flux:field>
@@ -71,7 +85,11 @@
                                 </a>
                             @endif
                         </div>
-                        <flux:button size="sm" variant="danger" wire:click="deleteDocument({{ $document->id }})">
+                        <flux:button
+                            size="sm"
+                            variant="danger"
+                            x-on:click.prevent="(async () => { if (await window.swalConfirmDialog({ title: 'Hapus Dokumen?', text: 'Dokumen vendor ini akan dihapus permanen.', confirmButtonText: 'Ya, hapus' })) { $wire.deleteDocument({{ $document->id }}) } })()"
+                        >
                             {{ __('Delete') }}
                         </flux:button>
                     </div>

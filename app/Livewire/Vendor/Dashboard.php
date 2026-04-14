@@ -35,6 +35,7 @@ class Dashboard extends Component
 
         $vendor = $user->vendor;
 
+        $canViewVendorSummary = $user->can('report.vendor.summary');
         $canViewVendorReport = $user->can('vendor.manage') || $vendor !== null;
         $canViewRfqReport = $user->can('rfq.view');
         $canViewPurchaseReport = $user->can('po.view');
@@ -42,14 +43,14 @@ class Dashboard extends Component
 
         $vendorScope = $this->vendorScope($user, $vendor);
 
-        $totalVendors = $canViewVendorReport ? (clone $vendorScope)->count() : 0;
-        $approvedVendorsCount = $canViewVendorReport
+        $totalVendors = $canViewVendorSummary ? (clone $vendorScope)->count() : 0;
+        $approvedVendorsCount = $canViewVendorSummary
             ? (clone $vendorScope)->where('status', VendorStatus::Approved)->count()
             : 0;
-        $pendingVendorsCount = $canViewVendorReport
+        $pendingVendorsCount = $canViewVendorSummary
             ? (clone $vendorScope)->where('status', VendorStatus::Pending)->count()
             : 0;
-        $rejectedVendorsCount = $canViewVendorReport
+        $rejectedVendorsCount = $canViewVendorSummary
             ? (clone $vendorScope)->where('status', VendorStatus::Rejected)->count()
             : 0;
 
@@ -117,6 +118,7 @@ class Dashboard extends Component
         return view('livewire.vendor.dashboard', [
             'vendor' => $vendor,
             'isVendorPending' => $vendor?->status === VendorStatus::Pending,
+            'canViewVendorSummary' => $canViewVendorSummary,
             'canViewVendorReport' => $canViewVendorReport,
             'canViewRfqReport' => $canViewRfqReport,
             'canViewPurchaseReport' => $canViewPurchaseReport,

@@ -1,7 +1,7 @@
 <x-layouts::auth :title="__('Log in')">
     <div class="space-y-6">
         <div class="space-y-1">
-            <flux:heading size="xl">{{ __('Welcome Back to ProChain') }}</flux:heading>
+            <flux:heading size="xl">{{ __('Welcome Back to APK Vendor') }}</flux:heading>
             <flux:text class="text-zinc-600 dark:text-zinc-300">{{ __('Sign in to continue your procurement workflow.') }}</flux:text>
         </div>
 

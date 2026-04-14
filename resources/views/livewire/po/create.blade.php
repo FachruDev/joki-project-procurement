@@ -4,7 +4,14 @@
             <flux:text class="mt-1">{{ __('Create PO from RFQ and define line items.') }}</flux:text>
         </div>
 
-        <form wire:submit="save" class="space-y-5 rounded-lg border border-zinc-200 p-5 dark:border-zinc-700">
+        <form
+            wire:submit="save"
+            class="space-y-5 rounded-lg border border-zinc-200 p-5 dark:border-zinc-700"
+            data-swal-confirm
+            data-swal-title="Create Purchase Order?"
+            data-swal-text="PO akan dibuat berdasarkan data vendor dan item saat ini."
+            data-swal-icon="question"
+        >
             <div class="grid gap-4 md:grid-cols-2">
                 <flux:field>
                     <flux:label>{{ __('RFQ (Optional)') }}</flux:label>
@@ -50,7 +57,12 @@
                             <flux:error name="items.{{ $index }}.price" />
                         </div>
                         <div class="md:col-span-1 flex items-end">
-                            <flux:button type="button" variant="danger" wire:click="removeItem({{ $index }})" :disabled="count($items) === 1">
+                            <flux:button
+                                type="button"
+                                variant="danger"
+                                :disabled="count($items) === 1"
+                                x-on:click.prevent="(async () => { if (await window.swalConfirmDialog({ title: 'Remove Item?', text: 'Item baris ini akan dihapus dari draft PO.', confirmButtonText: 'Ya, hapus' })) { $wire.removeItem({{ $index }}) } })()"
+                            >
                                 {{ __('X') }}
                             </flux:button>
                         </div>

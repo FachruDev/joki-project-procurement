@@ -15,7 +15,14 @@
             </flux:callout>
         @endif
 
-        <form wire:submit="save" class="space-y-4 rounded-lg border border-zinc-200 p-5 dark:border-zinc-700">
+        <form
+            wire:submit="save"
+            class="space-y-4 rounded-lg border border-zinc-200 p-5 dark:border-zinc-700"
+            data-swal-confirm
+            data-swal-title="Upload Invoice?"
+            data-swal-text="Dokumen invoice akan dikirim untuk proses approval."
+            data-swal-icon="question"
+        >
             <flux:field>
                 <flux:label>{{ __('Invoice File') }}</flux:label>
                 <flux:input wire:model="invoiceFile" type="file" />
