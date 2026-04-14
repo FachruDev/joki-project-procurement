@@ -1,7 +1,11 @@
 <section class="space-y-6">
-    <div>
-        <flux:heading size="xl">{{ __('My Invoice Upload') }}</flux:heading>
-        <flux:text class="mt-1">{{ __('Select purchase orders and upload or update invoice files.') }}</flux:text>
+    <div class="flex flex-wrap items-start justify-between gap-3">
+        <div>
+            <flux:heading size="xl">{{ __('My Invoice Upload') }}</flux:heading>
+            <flux:text class="mt-1">{{ __('Select purchase orders and upload or update invoice files.') }}</flux:text>
+        </div>
+
+        <flux:button :href="route('invoices.approved')" wire:navigate>{{ __('Approved Invoices') }}</flux:button>
     </div>
 
     <div class="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-700">

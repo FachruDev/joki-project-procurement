@@ -1,10 +1,13 @@
 <?php
 
+use App\Http\Controllers\InvoicePrintController;
 use App\Livewire\Admin\PermissionManagement;
 use App\Livewire\Admin\UserManagement;
 use App\Livewire\GR\Create as GrCreate;
 use App\Livewire\Invoice\Approve as InvoiceApprove;
+use App\Livewire\Invoice\ApprovedList as InvoiceApprovedList;
 use App\Livewire\Invoice\Index as InvoiceIndex;
+use App\Livewire\Invoice\Show as InvoiceShow;
 use App\Livewire\Invoice\Upload as InvoiceUpload;
 use App\Livewire\PO\Create as PoCreate;
 use App\Livewire\PO\Index as PoIndex;
@@ -14,8 +17,10 @@ use App\Livewire\RFQ\Index as RfqIndex;
 use App\Livewire\RFQ\Respond as RfqRespond;
 use App\Livewire\RFQ\Show as RfqShow;
 use App\Livewire\Vendor\Dashboard;
+use App\Livewire\Vendor\Index as VendorIndex;
 use App\Livewire\Vendor\Profile as VendorProfile;
 use App\Livewire\Vendor\Register as VendorRegister;
+use App\Livewire\Vendor\Show as VendorShow;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
@@ -34,6 +39,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('vendors', VendorRegister::class)
         ->middleware('can:vendor.manage')
         ->name('vendor.register');
+
+    Route::livewire('vendors/list', VendorIndex::class)
+        ->middleware('can:vendor.manage')
+        ->name('vendor.index');
+
+    Route::livewire('vendors/{vendor}', VendorShow::class)
+        ->middleware('can:view,vendor')
+        ->name('vendor.show');
 
     Route::livewire('vendor/profile', VendorProfile::class)
         ->middleware('can:rfq.respond')
@@ -82,6 +95,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('invoices/approval', InvoiceApprove::class)
         ->middleware('can:invoice.approve')
         ->name('invoices.approve');
+
+    Route::livewire('invoices/approved', InvoiceApprovedList::class)
+        ->middleware(['can:invoice.upload', 'approved_vendor'])
+        ->name('invoices.approved');
+
+    Route::livewire('invoices/{invoice}', InvoiceShow::class)
+        ->middleware('can:view,invoice')
+        ->name('invoices.show');
+
+    Route::get('invoices/{invoice}/print', InvoicePrintController::class)
+        ->middleware('can:view,invoice')
+        ->name('invoices.print');
 });
 
 require __DIR__.'/settings.php';

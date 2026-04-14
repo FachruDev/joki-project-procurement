@@ -18,6 +18,14 @@
             </flux:sidebar.header>
 
             <flux:sidebar.nav>
+                @php
+                    $currentUser = auth()->user();
+                    $isApprovedVendor = $currentUser->vendor?->status?->value === 'approved';
+                    $isPendingVendorWithoutManagement = $currentUser->vendor !== null
+                        && $isApprovedVendor === false
+                        && $currentUser->can('vendor.manage') === false;
+                @endphp
+
                 <flux:sidebar.group icon="home" :heading="__('Main')" expandable :expanded="request()->routeIs('dashboard')">
                     <flux:sidebar.item :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
                         {{ __('Dashboard') }}
@@ -41,22 +49,18 @@
                 @endif
 
                 @can('vendor.manage')
-                    <flux:sidebar.group icon="users" :heading="__('Vendor')" expandable :expanded="request()->routeIs('vendor.register')">
+                    <flux:sidebar.group icon="users" :heading="__('Vendor')" expandable :expanded="request()->routeIs('vendor.register') || request()->routeIs('vendor.index') || request()->routeIs('vendor.show')">
+                        <flux:sidebar.item :href="route('vendor.index')" :current="request()->routeIs('vendor.index') || request()->routeIs('vendor.show')" wire:navigate>
+                            {{ __('Vendor List') }}
+                        </flux:sidebar.item>
+
                         <flux:sidebar.item :href="route('vendor.register')" :current="request()->routeIs('vendor.register')" wire:navigate>
                             {{ __('Vendor Review') }}
                         </flux:sidebar.item>
                     </flux:sidebar.group>
                 @endcan
 
-                @can('rfq.respond')
-                    <flux:sidebar.group icon="identification" :heading="__('My Vendor')" expandable :expanded="request()->routeIs('vendor.profile')">
-                        <flux:sidebar.item :href="route('vendor.profile')" :current="request()->routeIs('vendor.profile')" wire:navigate>
-                            {{ __('Vendor Profile') }}
-                        </flux:sidebar.item>
-                    </flux:sidebar.group>
-                @endcan
-
-                @canany(['rfq.view', 'rfq.create'])
+                @if (! $isPendingVendorWithoutManagement && $currentUser->canAny(['rfq.view', 'rfq.create']))
                     <flux:sidebar.group icon="document-text" :heading="__('RFQ')" expandable :expanded="request()->routeIs('rfqs.*')">
                         @can('rfq.view')
                             <flux:sidebar.item :href="route('rfqs.index')" :current="request()->routeIs('rfqs.index')" wire:navigate>
@@ -70,9 +74,9 @@
                             </flux:sidebar.item>
                         @endcan
                     </flux:sidebar.group>
-                @endcanany
+                @endif
 
-                @canany(['po.view', 'po.create'])
+                @if (! $isPendingVendorWithoutManagement && $currentUser->canAny(['po.view', 'po.create']))
                     <flux:sidebar.group icon="shopping-cart" :heading="__('Purchase Orders')" expandable :expanded="request()->routeIs('pos.*') || request()->routeIs('gr.create')">
                         @can('po.view')
                             <flux:sidebar.item :href="route('pos.index')" :current="request()->routeIs('pos.index')" wire:navigate>
@@ -86,12 +90,12 @@
                             </flux:sidebar.item>
                         @endcan
                     </flux:sidebar.group>
-                @endcanany
+                @endif
 
                 @php
-                    $canUploadInvoice = auth()->user()->can('invoice.upload')
-                        && auth()->user()->can('po.view')
-                        && auth()->user()->vendor?->status?->value === 'approved';
+                    $canUploadInvoice = $currentUser->can('invoice.upload')
+                        && $currentUser->can('po.view')
+                        && $isApprovedVendor;
                 @endphp
 
                 @if (auth()->user()->can('invoice.approve') || $canUploadInvoice)
@@ -99,6 +103,10 @@
                         @if ($canUploadInvoice)
                             <flux:sidebar.item :href="route('invoices.index')" :current="request()->routeIs('invoices.index')" wire:navigate>
                                 {{ __('My Invoice Upload') }}
+                            </flux:sidebar.item>
+
+                            <flux:sidebar.item :href="route('invoices.approved')" :current="request()->routeIs('invoices.approved')" wire:navigate>
+                                {{ __('Approved Invoices') }}
                             </flux:sidebar.item>
                         @endif
 

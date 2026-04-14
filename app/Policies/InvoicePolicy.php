@@ -30,6 +30,10 @@ class InvoicePolicy
             return true;
         }
 
+        if ($this->shouldEnforceApprovedVendor($user) && $user->vendor->status !== VendorStatus::Approved) {
+            return false;
+        }
+
         return $user->vendor !== null && $invoice->vendor_id === $user->vendor->id;
     }
 

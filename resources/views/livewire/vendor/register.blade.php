@@ -47,6 +47,9 @@
                             <td class="px-4 py-3">{{ $vendor->documents_count }}</td>
                             <td class="px-4 py-3 text-right">
                                 <div class="flex justify-end gap-2">
+                                    <flux:button size="sm" :href="route('vendor.show', $vendor)" wire:navigate>
+                                        {{ __('View') }}
+                                    </flux:button>
                                     @can('vendor.approve')
                                         <flux:button
                                             size="sm"

@@ -51,6 +51,19 @@
                             </td>
                             <td class="px-4 py-3 text-right">
                                 <div class="flex justify-end gap-2">
+                                    @can('vendor.manage')
+                                        <flux:button size="sm" :href="route('vendor.show', $invoice->vendor)" wire:navigate>
+                                            {{ __('View Vendor') }}
+                                        </flux:button>
+                                    @endcan
+                                    <flux:button size="sm" :href="route('invoices.show', $invoice)" wire:navigate>
+                                        {{ __('View') }}
+                                    </flux:button>
+                                    @if ($invoice->status->value === 'approved')
+                                        <flux:button size="sm" variant="filled" :href="route('invoices.print', $invoice)" target="_blank">
+                                            {{ __('Print PDF') }}
+                                        </flux:button>
+                                    @endif
                                     <flux:button
                                         size="sm"
                                         variant="primary"
