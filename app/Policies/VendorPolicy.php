@@ -46,4 +46,12 @@ class VendorPolicy
     {
         return $user->can('vendor.approve');
     }
+
+    /**
+     * Determine whether the user can delete the model.
+     */
+    public function delete(User $user, Vendor $vendor): bool
+    {
+        return $user->can('vendor.manage');
+    }
 }

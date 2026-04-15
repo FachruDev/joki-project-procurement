@@ -14,7 +14,7 @@ class InvoiceUploadNavigationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_vendor_sidebar_links_my_invoice_upload_to_invoice_module(): void
+    public function test_vendor_sidebar_links_my_invoice_to_invoice_module(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
 
@@ -30,11 +30,11 @@ class InvoiceUploadNavigationTest extends TestCase
 
         $response
             ->assertOk()
-            ->assertSee('My Invoice Upload')
-            ->assertSee('href="'.route('invoices.index').'"', false);
+            ->assertSee('My Invoice')
+            ->assertSee('href="'.route('invoices.my').'"', false);
     }
 
-    public function test_vendor_can_open_my_invoice_upload_page_and_see_po_action_links(): void
+    public function test_vendor_can_open_my_invoice_page_and_see_po_action_links(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
 
@@ -50,11 +50,11 @@ class InvoiceUploadNavigationTest extends TestCase
             'vendor_id' => $vendor->id,
         ]);
 
-        $response = $this->actingAs($vendorUser)->get(route('invoices.index'));
+        $response = $this->actingAs($vendorUser)->get(route('invoices.my'));
 
         $response
             ->assertOk()
-            ->assertSee('My Invoice Upload')
+            ->assertSee('My Invoice')
             ->assertSee('#'.$purchaseOrder->id)
             ->assertSee(route('invoices.upload', $purchaseOrder), false);
     }

@@ -3,6 +3,7 @@
 namespace App\Livewire\PO;
 
 use App\Models\PurchaseOrder;
+use Flux\Flux;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 use Livewire\Attributes\Title;
@@ -21,6 +22,20 @@ class Show extends Component
         Gate::authorize('view', $purchaseOrder);
 
         $this->purchaseOrder = $purchaseOrder;
+    }
+
+    /**
+     * Delete purchase order.
+     */
+    public function deletePurchaseOrder(): void
+    {
+        Gate::authorize('delete', $this->purchaseOrder);
+
+        $this->purchaseOrder->delete();
+
+        Flux::toast(variant: 'success', text: __('Purchase order deleted successfully.'));
+
+        $this->redirect(route('pos.my', absolute: false), navigate: true);
     }
 
     public function render(): View

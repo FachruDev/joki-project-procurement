@@ -26,7 +26,7 @@ class PasswordResetTest extends TestCase
 
         $response
             ->assertOk()
-            ->assertSee('ProChain')
+            ->assertSee('APK Vendor')
             ->assertSee('img/prochain.png');
     }
 

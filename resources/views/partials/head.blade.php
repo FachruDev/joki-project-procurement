@@ -45,36 +45,68 @@
         return result.isConfirmed === true;
     };
 
-    document.addEventListener('submit', async (event) => {
-        const form = event.target;
+    if (!window.__swalSubmitInterceptorBound) {
+        window.__swalSubmitInterceptorBound = true;
 
-        if (!(form instanceof HTMLFormElement)) {
-            return;
-        }
+        document.addEventListener('submit', async (event) => {
+            const form = event.target;
 
-        if (!form.hasAttribute('data-swal-confirm') || form.dataset.swalConfirmed === '1') {
-            return;
-        }
+            if (!(form instanceof HTMLFormElement)) {
+                return;
+            }
 
-        event.preventDefault();
+            if (!form.hasAttribute('data-swal-confirm')) {
+                return;
+            }
 
-        const confirmed = await window.swalConfirmDialog({
-            title: form.dataset.swalTitle,
-            text: form.dataset.swalText,
-            icon: form.dataset.swalIcon,
-            confirmButtonText: form.dataset.swalConfirmText,
-            cancelButtonText: form.dataset.swalCancelText,
-        });
+            if (form.dataset.swalConfirmed === '1') {
+                form.dataset.swalConfirmed = '0';
+                return;
+            }
 
-        if (!confirmed) {
-            return;
-        }
+            if (form.dataset.swalProcessing === '1') {
+                event.preventDefault();
+                event.stopPropagation();
+                event.stopImmediatePropagation();
 
-        form.dataset.swalConfirmed = '1';
-        form.requestSubmit();
-        window.setTimeout(() => {
-            form.dataset.swalConfirmed = '0';
-        }, 0);
-    });
+                return;
+            }
+
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
+
+            form.dataset.swalProcessing = '1';
+
+            const confirmed = await window.swalConfirmDialog({
+                title: form.dataset.swalTitle,
+                text: form.dataset.swalText,
+                icon: form.dataset.swalIcon,
+                confirmButtonText: form.dataset.swalConfirmText,
+                cancelButtonText: form.dataset.swalCancelText,
+            });
+
+            if (!confirmed) {
+                form.dataset.swalProcessing = '0';
+
+                return;
+            }
+
+            form.dataset.swalConfirmed = '1';
+            form.dataset.swalProcessing = '0';
+
+            if (typeof form.requestSubmit === 'function') {
+                if (event.submitter !== undefined) {
+                    form.requestSubmit(event.submitter);
+                } else {
+                    form.requestSubmit();
+                }
+
+                return;
+            }
+
+            form.submit();
+        }, true);
+    }
 </script>
 @fluxAppearance

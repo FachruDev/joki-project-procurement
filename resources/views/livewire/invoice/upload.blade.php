@@ -7,8 +7,11 @@
         @if ($existingInvoice)
             <flux:callout icon="document-text" variant="secondary">
                 {{ __('Current invoice status:') }} {{ strtoupper($existingInvoice->status->value) }}
-                @if ($existingInvoice->getFirstMediaUrl('invoice-files') !== '')
-                    <a href="{{ $existingInvoice->getFirstMediaUrl('invoice-files') }}" target="_blank" class="ms-2 text-blue-600 underline dark:text-blue-400">
+                @php
+                    $existingInvoiceMedia = $existingInvoice->getFirstMedia('invoice-files');
+                @endphp
+                @if ($existingInvoiceMedia !== null)
+                    <a href="{{ route('media.show', $existingInvoiceMedia) }}" target="_blank" class="ms-2 text-blue-600 underline dark:text-blue-400">
                         {{ __('View file') }}
                     </a>
                 @endif

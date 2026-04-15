@@ -1,13 +1,15 @@
 <section class="space-y-6">
     <div class="flex items-center justify-between">
         <div>
-            <flux:heading size="xl">{{ __('RFQ List') }}</flux:heading>
-            <flux:text class="mt-1">{{ __('Master list of RFQ records and response progress.') }}</flux:text>
+            <flux:heading size="xl">{{ __('My RFQ') }}</flux:heading>
+            <flux:text class="mt-1">{{ __('RFQ records created by you or assigned to your vendor account.') }}</flux:text>
         </div>
 
-        <flux:button :href="route('rfqs.my')" wire:navigate>
-            {{ __('Open My RFQ') }}
-        </flux:button>
+        @can('rfq.create')
+            <flux:button variant="primary" :href="route('rfqs.create')" wire:navigate>
+                {{ __('Create RFQ') }}
+            </flux:button>
+        @endcan
     </div>
 
     <div class="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-700">
@@ -15,8 +17,7 @@
             <thead class="bg-zinc-50 dark:bg-zinc-900">
                 <tr>
                     <th class="px-4 py-3 text-left">{{ __('RFQ') }}</th>
-                    <th class="px-4 py-3 text-left">{{ __('Creator') }}</th>
-                    <th class="px-4 py-3 text-left">{{ __('Vendors') }}</th>
+                    <th class="px-4 py-3 text-left">{{ __('Deadline') }}</th>
                     <th class="px-4 py-3 text-left">{{ __('Responses') }}</th>
                     <th class="px-4 py-3 text-left">{{ __('Status') }}</th>
                     <th class="px-4 py-3 text-right">{{ __('Action') }}</th>
@@ -27,23 +28,10 @@
                     <tr>
                         <td class="px-4 py-3">
                             <div class="font-medium">{{ $rfq->title }}</div>
-                            <div class="text-xs text-zinc-500">{{ __('Deadline:') }} {{ $rfq->deadline->format('Y-m-d H:i') }}</div>
+                            <div class="text-xs text-zinc-500">{{ \Illuminate\Support\Str::limit($rfq->description, 80) }}</div>
                         </td>
-                        <td class="px-4 py-3">{{ $rfq->creator?->name ?? '-' }}</td>
-                        <td class="px-4 py-3">
-                            <div>{{ $rfq->vendors_count }}</div>
-                            <div class="text-xs text-zinc-500">{{ $rfq->vendors->pluck('company_name')->take(2)->implode(', ') }}@if ($rfq->vendors_count > 2), ...@endif</div>
-                        </td>
-                        <td class="px-4 py-3">
-                            <div>{{ $rfq->responses_count }}</div>
-                            <div class="text-xs text-zinc-500">
-                                @if ($rfq->responses_count > 0)
-                                    {{ __('Latest:') }} {{ $rfq->responses->last()?->vendor?->company_name ?? '-' }}
-                                @else
-                                    {{ __('No response yet') }}
-                                @endif
-                            </div>
-                        </td>
+                        <td class="px-4 py-3">{{ $rfq->deadline->format('Y-m-d H:i') }}</td>
+                        <td class="px-4 py-3">{{ $rfq->responses_count }}</td>
                         <td class="px-4 py-3">
                             <flux:badge :color="$rfq->status->value === 'open' ? 'green' : 'zinc'">
                                 {{ strtoupper($rfq->status->value) }}
@@ -83,7 +71,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="px-4 py-6 text-center text-zinc-500">{{ __('No RFQs found.') }}</td>
+                        <td colspan="5" class="px-4 py-6 text-center text-zinc-500">{{ __('No RFQs available.') }}</td>
                     </tr>
                 @endforelse
             </tbody>

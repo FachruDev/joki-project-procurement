@@ -71,8 +71,11 @@
                         <div class="font-medium">{{ $document->document_type }}</div>
                         <div class="text-xs text-zinc-500">{{ __('Uploaded at:') }} {{ $document->created_at?->format('Y-m-d H:i') }}</div>
                     </div>
-                    @if ($document->getFirstMediaUrl('documents') !== '')
-                        <flux:button size="sm" :href="$document->getFirstMediaUrl('documents')" target="_blank">
+                    @php
+                        $documentMedia = $document->getFirstMedia('documents');
+                    @endphp
+                    @if ($documentMedia !== null)
+                        <flux:button size="sm" :href="route('media.show', $documentMedia)" target="_blank">
                             {{ __('View File') }}
                         </flux:button>
                     @else
@@ -105,8 +108,11 @@
                             <td class="px-4 py-3">#{{ $invoice->po_id }}</td>
                             <td class="px-4 py-3">{{ number_format((float) ($invoice->purchaseOrder?->total_price ?? 0), 2) }}</td>
                             <td class="px-4 py-3">
-                                @if ($invoice->getFirstMediaUrl('invoice-files') !== '')
-                                    <a href="{{ $invoice->getFirstMediaUrl('invoice-files') }}" target="_blank" class="text-blue-600 underline dark:text-blue-400">{{ __('Open') }}</a>
+                                @php
+                                    $invoiceMedia = $invoice->getFirstMedia('invoice-files');
+                                @endphp
+                                @if ($invoiceMedia !== null)
+                                    <a href="{{ route('media.show', $invoiceMedia) }}" target="_blank" class="text-blue-600 underline dark:text-blue-400">{{ __('Open') }}</a>
                                 @else
                                     <span class="text-zinc-500">{{ __('Missing') }}</span>
                                 @endif

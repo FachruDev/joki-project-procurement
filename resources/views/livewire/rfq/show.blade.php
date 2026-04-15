@@ -13,7 +13,7 @@
                     {{ strtoupper($rfq->status->value) }}
                 </flux:badge>
 
-                @can('rfq.create')
+                @can('update', $rfq)
                     @if ($rfq->status->value === 'open')
                         <flux:button
                             x-on:click.prevent="(async () => { if (await window.swalConfirmDialog({ title: 'Close RFQ?', text: 'RFQ akan ditutup dan tidak menerima respons baru.' })) { $wire.closeRfq() } })()"
@@ -21,6 +21,21 @@
                             {{ __('Close RFQ') }}
                         </flux:button>
                     @endif
+                @endcan
+
+                @can('update', $rfq)
+                    <flux:button :href="route('rfqs.edit', $rfq)" wire:navigate>
+                        {{ __('Edit') }}
+                    </flux:button>
+                @endcan
+
+                @can('delete', $rfq)
+                    <flux:button
+                        variant="danger"
+                        x-on:click.prevent="(async () => { if (await window.swalConfirmDialog({ title: 'Delete RFQ?', text: 'RFQ ini akan dihapus permanen.', icon: 'warning', confirmButtonText: 'Ya, hapus' })) { $wire.deleteRfq() } })()"
+                    >
+                        {{ __('Delete') }}
+                    </flux:button>
                 @endcan
             </div>
         </div>

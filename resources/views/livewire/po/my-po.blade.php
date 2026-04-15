@@ -1,13 +1,15 @@
 <section class="space-y-6">
     <div class="flex items-center justify-between">
         <div>
-            <flux:heading size="xl">{{ __('PO List') }}</flux:heading>
-            <flux:text class="mt-1">{{ __('Master list of purchase orders.') }}</flux:text>
+            <flux:heading size="xl">{{ __('My PO') }}</flux:heading>
+            <flux:text class="mt-1">{{ __('Purchase orders assigned to your vendor or created by your procurement account.') }}</flux:text>
         </div>
 
-        <flux:button :href="route('pos.my')" wire:navigate>
-            {{ __('Open My PO') }}
-        </flux:button>
+        @can('po.create')
+            <flux:button variant="primary" :href="route('pos.create')" wire:navigate>
+                {{ __('Create PO') }}
+            </flux:button>
+        @endcan
     </div>
 
     <div class="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-700">

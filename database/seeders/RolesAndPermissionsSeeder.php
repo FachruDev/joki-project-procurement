@@ -27,10 +27,15 @@ class RolesAndPermissionsSeeder extends Seeder
             'vendor.approve',
             'rfq.create',
             'rfq.view',
+            'rfq.update',
+            'rfq.delete',
             'rfq.respond',
             'po.create',
             'po.view',
+            'po.update',
+            'po.delete',
             'gr.create',
+            'invoice.view',
             'invoice.upload',
             'invoice.approve',
             'report.vendor.summary',
@@ -54,9 +59,14 @@ class RolesAndPermissionsSeeder extends Seeder
             'vendor.manage',
             'rfq.create',
             'rfq.view',
+            'rfq.update',
+            'rfq.delete',
             'po.create',
             'po.view',
+            'po.update',
+            'po.delete',
             'gr.create',
+            'invoice.view',
             'report.vendor.summary',
         ]);
 
@@ -64,6 +74,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'rfq.view',
             'rfq.respond',
             'po.view',
+            'invoice.view',
             'invoice.upload',
         ]);
 

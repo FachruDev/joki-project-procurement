@@ -12,13 +12,14 @@ use App\VendorStatus;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Spatie\Activitylog\Models\Activity;
 use Tests\TestCase;
 
 class RfqResponseFlowTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_vendor_can_submit_only_one_response_per_rfq(): void
+    public function test_vendor_can_submit_and_update_response_per_rfq(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
 
@@ -55,10 +56,24 @@ class RfqResponseFlowTest extends TestCase
         Livewire::actingAs($vendorUser)
             ->test(RfqRespond::class, ['rfq' => $rfq])
             ->set('price', '13000')
+            ->set('notes', 'Updated offer')
             ->call('submit')
-            ->assertHasErrors('price');
+            ->assertHasNoErrors();
+
+        $response = RfqResponse::query()
+            ->where('rfq_id', $rfq->id)
+            ->where('vendor_id', $vendor->id)
+            ->firstOrFail();
 
         $this->assertSame(1, RfqResponse::query()->where('rfq_id', $rfq->id)->where('vendor_id', $vendor->id)->count());
+        $this->assertSame('13000.00', $response->price);
+        $this->assertSame('Updated offer', $response->notes);
+
+        $this->assertTrue(Activity::query()
+            ->where('subject_type', RfqResponse::class)
+            ->where('subject_id', $response->id)
+            ->where('description', 'rfq_response_updated')
+            ->exists());
     }
 
     public function test_vendor_must_be_assigned_to_respond(): void

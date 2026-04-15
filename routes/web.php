@@ -1,19 +1,24 @@
 <?php
 
 use App\Http\Controllers\InvoicePrintController;
+use App\Http\Controllers\MediaFileController;
 use App\Livewire\Admin\PermissionManagement;
 use App\Livewire\Admin\UserManagement;
 use App\Livewire\GR\Create as GrCreate;
 use App\Livewire\Invoice\Approve as InvoiceApprove;
-use App\Livewire\Invoice\ApprovedList as InvoiceApprovedList;
-use App\Livewire\Invoice\Index as InvoiceIndex;
+use App\Livewire\Invoice\ListAll as InvoiceListAll;
+use App\Livewire\Invoice\MyInvoice;
 use App\Livewire\Invoice\Show as InvoiceShow;
 use App\Livewire\Invoice\Upload as InvoiceUpload;
 use App\Livewire\PO\Create as PoCreate;
+use App\Livewire\PO\Edit as PoEdit;
 use App\Livewire\PO\Index as PoIndex;
+use App\Livewire\PO\MyPo;
 use App\Livewire\PO\Show as PoShow;
 use App\Livewire\RFQ\Create as RfqCreate;
+use App\Livewire\RFQ\Edit as RfqEdit;
 use App\Livewire\RFQ\Index as RfqIndex;
+use App\Livewire\RFQ\MyRfq;
 use App\Livewire\RFQ\Respond as RfqRespond;
 use App\Livewire\RFQ\Show as RfqShow;
 use App\Livewire\Vendor\Dashboard;
@@ -27,6 +32,8 @@ Route::view('/', 'welcome')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('dashboard', Dashboard::class)->name('dashboard');
+
+    Route::get('media/{media}', MediaFileController::class)->name('media.show');
 
     Route::livewire('management/users', UserManagement::class)
         ->middleware('permission:user.manage')
@@ -56,9 +63,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('can:rfq.view')
         ->name('rfqs.index');
 
+    Route::livewire('rfqs/my', MyRfq::class)
+        ->middleware('can:rfq.view')
+        ->name('rfqs.my');
+
     Route::livewire('rfqs/create', RfqCreate::class)
         ->middleware('can:rfq.create')
         ->name('rfqs.create');
+
+    Route::livewire('rfqs/{rfq}/edit', RfqEdit::class)
+        ->middleware('can:update,rfq')
+        ->name('rfqs.edit');
 
     Route::livewire('rfqs/{rfq}', RfqShow::class)
         ->middleware('can:rfq.view')
@@ -72,9 +87,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('can:po.view')
         ->name('pos.index');
 
+    Route::livewire('purchase-orders/my', MyPo::class)
+        ->middleware('can:po.view')
+        ->name('pos.my');
+
     Route::livewire('purchase-orders/create', PoCreate::class)
         ->middleware('can:po.create')
         ->name('pos.create');
+
+    Route::livewire('purchase-orders/{purchaseOrder}/edit', PoEdit::class)
+        ->middleware('can:update,purchaseOrder')
+        ->name('pos.edit');
 
     Route::livewire('purchase-orders/{purchaseOrder}', PoShow::class)
         ->middleware('can:po.view')
@@ -84,9 +107,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('can:gr.create')
         ->name('gr.create');
 
-    Route::livewire('invoices', InvoiceIndex::class)
-        ->middleware(['can:invoice.upload', 'approved_vendor'])
-        ->name('invoices.index');
+    Route::livewire('invoices', InvoiceListAll::class)
+        ->middleware('can:invoice.view')
+        ->name('invoices.list');
+
+    Route::livewire('invoices/my', MyInvoice::class)
+        ->middleware('can:invoice.view')
+        ->name('invoices.my');
 
     Route::livewire('purchase-orders/{purchaseOrder}/invoice/upload', InvoiceUpload::class)
         ->middleware(['can:invoice.upload', 'approved_vendor'])
@@ -95,10 +122,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('invoices/approval', InvoiceApprove::class)
         ->middleware('can:invoice.approve')
         ->name('invoices.approve');
-
-    Route::livewire('invoices/approved', InvoiceApprovedList::class)
-        ->middleware(['can:invoice.upload', 'approved_vendor'])
-        ->name('invoices.approved');
 
     Route::livewire('invoices/{invoice}', InvoiceShow::class)
         ->middleware('can:view,invoice')

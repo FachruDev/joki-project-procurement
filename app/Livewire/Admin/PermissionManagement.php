@@ -16,15 +16,23 @@ use Spatie\Permission\Models\Role;
 #[Title('Role & Permission Management')]
 class PermissionManagement extends Component
 {
-    private const string SUPER_ADMIN_ROLE = 'SuperAdmin';
+    private const array PROTECTED_ROLE_NAMES = ['SuperAdmin', 'Procurement', 'Vendor'];
 
     public string $permissionName = '';
 
     public string $roleName = '';
 
+    public ?int $editingPermissionId = null;
+
+    public string $editingPermissionName = '';
+
+    public ?int $editingRoleId = null;
+
+    public string $editingRoleName = '';
+
     public ?int $selectedRoleId = null;
 
-    public bool $selectedRoleIsLocked = false;
+    public bool $selectedRoleNameLocked = false;
 
     /**
      * @var list<int>
@@ -76,6 +84,150 @@ class PermissionManagement extends Component
     }
 
     /**
+     * Start editing a permission record.
+     */
+    public function startEditingPermission(int $permissionId): void
+    {
+        Gate::authorize('permission.manage');
+
+        $permission = Permission::query()->findOrFail($permissionId);
+
+        $this->editingPermissionId = $permission->id;
+        $this->editingPermissionName = $permission->name;
+    }
+
+    /**
+     * Cancel permission edit state.
+     */
+    public function cancelEditingPermission(): void
+    {
+        $this->reset('editingPermissionId', 'editingPermissionName');
+    }
+
+    /**
+     * Update selected permission.
+     */
+    public function updatePermission(): void
+    {
+        Gate::authorize('permission.manage');
+
+        $validated = $this->validate([
+            'editingPermissionId' => ['required', 'integer', Rule::exists('permissions', 'id')],
+            'editingPermissionName' => ['required', 'string', 'max:255', 'regex:/^[a-z0-9\.\-]+$/', Rule::unique('permissions', 'name')->ignore($this->editingPermissionId)],
+        ]);
+
+        $permission = Permission::query()->findOrFail($validated['editingPermissionId']);
+        $permission->update(['name' => $validated['editingPermissionName']]);
+
+        $this->cancelEditingPermission();
+
+        Flux::toast(variant: 'success', text: __('Permission updated successfully.'));
+    }
+
+    /**
+     * Delete selected permission.
+     */
+    public function deletePermission(int $permissionId): void
+    {
+        Gate::authorize('permission.manage');
+
+        $permission = Permission::query()->findOrFail($permissionId);
+        $permission->delete();
+
+        if ($this->editingPermissionId === $permissionId) {
+            $this->cancelEditingPermission();
+        }
+
+        if ($this->selectedRoleId !== null) {
+            $this->selectRole($this->selectedRoleId);
+        }
+
+        Flux::toast(variant: 'success', text: __('Permission deleted successfully.'));
+    }
+
+    /**
+     * Start editing a role record.
+     */
+    public function startEditingRole(int $roleId): void
+    {
+        Gate::authorize('permission.manage');
+
+        $role = Role::query()->findOrFail($roleId);
+
+        $this->editingRoleId = $role->id;
+        $this->editingRoleName = $role->name;
+    }
+
+    /**
+     * Cancel role edit state.
+     */
+    public function cancelEditingRole(): void
+    {
+        $this->reset('editingRoleId', 'editingRoleName');
+    }
+
+    /**
+     * Update selected role name.
+     */
+    public function updateRole(): void
+    {
+        Gate::authorize('permission.manage');
+
+        $validated = $this->validate([
+            'editingRoleId' => ['required', 'integer', Rule::exists('roles', 'id')],
+            'editingRoleName' => ['required', 'string', 'max:255', Rule::unique('roles', 'name')->ignore($this->editingRoleId)],
+        ]);
+
+        $role = Role::query()->findOrFail($validated['editingRoleId']);
+
+        if ($this->isProtectedRoleName($role->name)) {
+            $this->addError('editingRoleName', __('Protected roles cannot be renamed.'));
+
+            return;
+        }
+
+        $role->update([
+            'name' => $validated['editingRoleName'],
+        ]);
+
+        if ($this->selectedRoleId === $role->id) {
+            $this->selectRole($role->id);
+        }
+
+        $this->cancelEditingRole();
+
+        Flux::toast(variant: 'success', text: __('Role updated successfully.'));
+    }
+
+    /**
+     * Delete selected role.
+     */
+    public function deleteRole(int $roleId): void
+    {
+        Gate::authorize('permission.manage');
+
+        $role = Role::query()->findOrFail($roleId);
+
+        if ($this->isProtectedRoleName($role->name)) {
+            Flux::toast(variant: 'danger', text: __('Protected roles cannot be deleted.'));
+
+            return;
+        }
+
+        $role->delete();
+
+        if ($this->editingRoleId === $roleId) {
+            $this->cancelEditingRole();
+        }
+
+        if ($this->selectedRoleId === $roleId) {
+            $this->reset('selectedRoleId', 'selectedRoleNameLocked', 'rolePermissionIds');
+        }
+
+        Flux::toast(variant: 'success', text: __('Role deleted successfully.'));
+    }
+
+    /**
      * Select role to manage permissions.
      */
     public function selectRole(int $roleId): void
@@ -87,7 +239,7 @@ class PermissionManagement extends Component
             ->findOrFail($roleId);
 
         $this->selectedRoleId = $role->id;
-        $this->selectedRoleIsLocked = $this->isSuperAdminRole($role);
+        $this->selectedRoleNameLocked = $this->isProtectedRoleName($role->name);
         $this->rolePermissionIds = $role->permissions->pluck('id')->all();
     }
 
@@ -105,12 +257,6 @@ class PermissionManagement extends Component
         ]);
 
         $role = Role::query()->findOrFail($validated['selectedRoleId']);
-
-        if ($this->isSuperAdminRole($role)) {
-            $this->addError('selectedRoleId', __('SuperAdmin role is protected and cannot be modified.'));
-
-            return;
-        }
 
         $permissionNames = Permission::query()
             ->whereIn('id', $validated['rolePermissionIds'] ?? [])
@@ -150,12 +296,12 @@ class PermissionManagement extends Component
     public function render(): View
     {
         return view('livewire.admin.permission-management', [
-            'selectedRoleIsLocked' => $this->selectedRoleIsLocked,
+            'selectedRoleNameLocked' => $this->selectedRoleNameLocked,
         ]);
     }
 
-    private function isSuperAdminRole(Role $role): bool
+    private function isProtectedRoleName(string $roleName): bool
     {
-        return $role->name === self::SUPER_ADMIN_ROLE;
+        return in_array($roleName, self::PROTECTED_ROLE_NAMES, true);
     }
 }

@@ -12,17 +12,17 @@
             </div>
 
             <div class="flex flex-wrap gap-2">
-                @if (auth()->user()->canAny(['report.vendor.summary', 'vendor.manage', 'rfq.view', 'po.view', 'invoice.approve', 'invoice.upload']))
+                @if (auth()->user()->canAny(['report.vendor.summary', 'vendor.manage', 'rfq.view', 'po.view', 'invoice.approve', 'invoice.upload', 'invoice.view']))
                     <flux:button variant="filled" wire:click="exportToExcel">{{ __('Export Excel') }}</flux:button>
                 @endif
                 @can('vendor.manage')
                     <flux:button variant="primary" :href="route('vendor.register')" wire:navigate>{{ __('Manage Vendors') }}</flux:button>
                 @endcan
                 @can('rfq.create')
-                    <flux:button :href="route('rfqs.create')" wire:navigate>{{ __('Create RFQ') }}</flux:button>
+                    <flux:button :href="route('rfqs.my')" wire:navigate>{{ __('Create RFQ') }}</flux:button>
                 @endcan
                 @can('po.create')
-                    <flux:button :href="route('pos.create')" wire:navigate>{{ __('Create PO') }}</flux:button>
+                    <flux:button :href="route('pos.my')" wire:navigate>{{ __('Create PO') }}</flux:button>
                 @endcan
                 @if ($vendor !== null)
                     <flux:button :href="route('vendor.profile')" wire:navigate>{{ __('Vendor Profile') }}</flux:button>

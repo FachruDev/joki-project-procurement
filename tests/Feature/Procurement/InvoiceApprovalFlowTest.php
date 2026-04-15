@@ -50,7 +50,7 @@ class InvoiceApprovalFlowTest extends TestCase
         Livewire::actingAs($admin)
             ->test(InvoiceApprove::class)
             ->call('approve', $invoice->id)
-            ->assertHasErrors('statusFilter');
+            ->assertHasErrors('selectedInvoiceIds');
 
         $invoice->refresh();
 
@@ -96,5 +96,64 @@ class InvoiceApprovalFlowTest extends TestCase
         $invoice->refresh();
 
         $this->assertSame(InvoiceStatus::Approved, $invoice->status);
+    }
+
+    public function test_admin_can_bulk_approve_pending_invoices(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        Storage::fake('public');
+
+        $admin = User::factory()->create();
+        $admin->assignRole('Admin');
+
+        $procurement = User::factory()->create();
+        $procurement->assignRole('Procurement');
+
+        $vendor = Vendor::factory()->create([
+            'status' => VendorStatus::Approved,
+        ]);
+
+        $purchaseOrder = PurchaseOrder::factory()->create([
+            'vendor_id' => $vendor->id,
+            'created_by' => $procurement->id,
+            'status' => PurchaseOrderStatus::Approved,
+        ]);
+
+        $purchaseOrderTwo = PurchaseOrder::factory()->create([
+            'vendor_id' => $vendor->id,
+            'created_by' => $procurement->id,
+            'status' => PurchaseOrderStatus::Approved,
+        ]);
+
+        $invoiceOne = Invoice::factory()->create([
+            'po_id' => $purchaseOrder->id,
+            'vendor_id' => $vendor->id,
+            'status' => InvoiceStatus::Pending,
+        ]);
+
+        $invoiceTwo = Invoice::factory()->create([
+            'po_id' => $purchaseOrderTwo->id,
+            'vendor_id' => $vendor->id,
+            'status' => InvoiceStatus::Pending,
+        ]);
+
+        $invoiceOne->addMedia(UploadedFile::fake()->create('invoice-one.pdf', 100))
+            ->toMediaCollection('invoice-files');
+
+        $invoiceTwo->addMedia(UploadedFile::fake()->create('invoice-two.pdf', 100))
+            ->toMediaCollection('invoice-files');
+
+        Livewire::actingAs($admin)
+            ->test(InvoiceApprove::class)
+            ->set('selectedInvoiceIds', [$invoiceOne->id, $invoiceTwo->id])
+            ->call('bulkApprove')
+            ->assertHasNoErrors();
+
+        $invoiceOne->refresh();
+        $invoiceTwo->refresh();
+
+        $this->assertSame(InvoiceStatus::Approved, $invoiceOne->status);
+        $this->assertSame(InvoiceStatus::Approved, $invoiceTwo->status);
     }
 }

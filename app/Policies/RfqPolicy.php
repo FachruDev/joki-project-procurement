@@ -45,7 +45,15 @@ class RfqPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('rfq.create');
+        if (! $user->can('rfq.create')) {
+            return false;
+        }
+
+        if ($this->shouldEnforceApprovedVendor($user) && $user->vendor->status !== VendorStatus::Approved) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -53,7 +61,39 @@ class RfqPolicy
      */
     public function update(User $user, Rfq $rfq): bool
     {
-        return $user->can('rfq.create');
+        if (! $user->can('rfq.update')) {
+            return false;
+        }
+
+        if ($this->shouldEnforceApprovedVendor($user) && $user->vendor->status !== VendorStatus::Approved) {
+            return false;
+        }
+
+        if ($user->can('vendor.manage')) {
+            return true;
+        }
+
+        return $rfq->created_by === $user->id;
+    }
+
+    /**
+     * Determine whether the user can delete the model.
+     */
+    public function delete(User $user, Rfq $rfq): bool
+    {
+        if (! $user->can('rfq.delete')) {
+            return false;
+        }
+
+        if ($this->shouldEnforceApprovedVendor($user) && $user->vendor->status !== VendorStatus::Approved) {
+            return false;
+        }
+
+        if ($user->can('vendor.manage')) {
+            return true;
+        }
+
+        return $rfq->created_by === $user->id;
     }
 
     /**

@@ -79,8 +79,11 @@
                     <div class="flex items-center justify-between rounded-md border border-zinc-200 px-4 py-3 dark:border-zinc-700">
                         <div>
                             <div class="font-medium">{{ $document->document_type }}</div>
-                            @if ($document->getFirstMediaUrl('documents') !== '')
-                                <a href="{{ $document->getFirstMediaUrl('documents') }}" target="_blank" class="text-sm text-blue-600 underline dark:text-blue-400">
+                            @php
+                                $documentMedia = $document->getFirstMedia('documents');
+                            @endphp
+                            @if ($documentMedia !== null)
+                                <a href="{{ route('media.show', $documentMedia) }}" target="_blank" class="text-sm text-blue-600 underline dark:text-blue-400">
                                     {{ __('View file') }}
                                 </a>
                             @endif

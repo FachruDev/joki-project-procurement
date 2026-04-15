@@ -18,7 +18,7 @@ class InvoicePolicy
             return false;
         }
 
-        return $user->can('invoice.approve') || $user->can('invoice.upload') || $user->can('po.view');
+        return $user->can('invoice.approve') || $user->can('invoice.view') || $user->can('invoice.upload');
     }
 
     /**
@@ -26,15 +26,25 @@ class InvoicePolicy
      */
     public function view(User $user, Invoice $invoice): bool
     {
-        if ($user->can('invoice.approve')) {
+        if ($user->can('invoice.approve') || $user->can('vendor.manage')) {
             return true;
+        }
+
+        if (! $user->can('invoice.view') && ! $user->can('invoice.upload')) {
+            return false;
         }
 
         if ($this->shouldEnforceApprovedVendor($user) && $user->vendor->status !== VendorStatus::Approved) {
             return false;
         }
 
-        return $user->vendor !== null && $invoice->vendor_id === $user->vendor->id;
+        if ($user->vendor !== null) {
+            return $invoice->vendor_id === $user->vendor->id;
+        }
+
+        $invoice->loadMissing('purchaseOrder:id,created_by');
+
+        return $invoice->purchaseOrder?->created_by === $user->id;
     }
 
     /**

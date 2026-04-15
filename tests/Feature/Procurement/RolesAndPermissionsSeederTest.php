@@ -22,10 +22,15 @@ class RolesAndPermissionsSeederTest extends TestCase
             'vendor.approve',
             'rfq.create',
             'rfq.view',
+            'rfq.update',
+            'rfq.delete',
             'rfq.respond',
             'po.create',
             'po.view',
+            'po.update',
+            'po.delete',
             'gr.create',
+            'invoice.view',
             'invoice.upload',
             'invoice.approve',
             'report.vendor.summary',
@@ -49,8 +54,10 @@ class RolesAndPermissionsSeederTest extends TestCase
         $this->assertTrue($superAdmin->hasPermissionTo('permission.manage'));
         $this->assertTrue($procurement->hasPermissionTo('po.create'));
         $this->assertTrue($procurement->hasPermissionTo('report.vendor.summary'));
+        $this->assertTrue($procurement->hasPermissionTo('invoice.view'));
         $this->assertFalse($procurement->hasPermissionTo('invoice.approve'));
         $this->assertTrue($vendor->hasPermissionTo('invoice.upload'));
+        $this->assertTrue($vendor->hasPermissionTo('invoice.view'));
         $this->assertFalse($vendor->hasPermissionTo('vendor.approve'));
         $this->assertFalse($vendor->hasPermissionTo('report.vendor.summary'));
 

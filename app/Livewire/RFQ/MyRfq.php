@@ -10,8 +10,8 @@ use Illuminate\View\View;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-#[Title('RFQ List')]
-class Index extends Component
+#[Title('My RFQ')]
+class MyRfq extends Component
 {
     /**
      * Mount the component.
@@ -45,17 +45,25 @@ class Index extends Component
     {
         $user = Auth::user();
 
+        if ($user === null) {
+            abort(401);
+        }
+
         $rfqs = Rfq::query()
-            ->with(['creator', 'vendors.user', 'responses.vendor'])
-            ->withCount(['responses', 'vendors'])
+            ->with(['creator', 'vendors.user'])
+            ->withCount('responses')
             ->when(
-                $user?->vendor !== null && $user?->can('vendor.manage') === false,
+                $user->vendor !== null,
                 fn ($query) => $query->whereHas('vendors', fn ($vendorQuery) => $vendorQuery->whereKey($user->vendor->id)),
+            )
+            ->when(
+                $user->vendor === null && $user->hasRole('Procurement'),
+                fn ($query) => $query->where('created_by', $user->id),
             )
             ->latest()
             ->get();
 
-        return view('livewire.rfq.index', [
+        return view('livewire.rfq.my-rfq', [
             'rfqs' => $rfqs,
         ]);
     }

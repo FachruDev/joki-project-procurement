@@ -23,6 +23,56 @@
         </div>
     </div>
 
+    @if ($editingVendorId)
+        <form
+            wire:submit="updateVendor"
+            class="space-y-4 rounded-lg border border-zinc-200 p-5 dark:border-zinc-700"
+            data-swal-confirm
+            data-swal-title="Simpan perubahan vendor?"
+            data-swal-text="Data vendor akan diperbarui."
+            data-swal-icon="question"
+        >
+            <flux:heading>{{ __('Edit Vendor') }}</flux:heading>
+
+            <div class="grid gap-4 md:grid-cols-2">
+                <flux:field>
+                    <flux:label>{{ __('Company Name') }}</flux:label>
+                    <flux:input wire:model="companyName" type="text" />
+                    <flux:error name="companyName" />
+                </flux:field>
+
+                <flux:field>
+                    <flux:label>{{ __('Phone') }}</flux:label>
+                    <flux:input wire:model="phone" type="text" />
+                    <flux:error name="phone" />
+                </flux:field>
+            </div>
+
+            <flux:field>
+                <flux:label>{{ __('Address') }}</flux:label>
+                <flux:textarea wire:model="address" rows="3" />
+                <flux:error name="address" />
+            </flux:field>
+
+            <flux:field>
+                <flux:label>{{ __('Status') }}</flux:label>
+                <flux:select wire:model="vendorStatus">
+                    <option value="pending">{{ __('Pending') }}</option>
+                    <option value="approved">{{ __('Approved') }}</option>
+                    <option value="rejected">{{ __('Rejected') }}</option>
+                </flux:select>
+                <flux:error name="vendorStatus" />
+            </flux:field>
+
+            <flux:error name="editingVendorId" />
+
+            <div class="flex flex-wrap gap-2">
+                <flux:button type="submit" variant="primary">{{ __('Save') }}</flux:button>
+                <flux:button type="button" variant="ghost" wire:click="cancelEdit">{{ __('Cancel') }}</flux:button>
+            </div>
+        </form>
+    @endif
+
     <div class="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-700">
         <table class="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-700">
             <thead class="bg-zinc-50 dark:bg-zinc-900">
@@ -59,9 +109,19 @@
                         <td class="px-4 py-3">{{ $vendor->documents_count }}</td>
                         <td class="px-4 py-3">{{ number_format((float) ($vendor->total_transaction_amount ?? 0), 2) }}</td>
                         <td class="px-4 py-3 text-right">
-                            <flux:button size="sm" :href="route('vendor.show', $vendor)" wire:navigate>
-                                {{ __('View') }}
-                            </flux:button>
+                            <div class="flex justify-end gap-2">
+                                <flux:button size="sm" :href="route('vendor.show', $vendor)" wire:navigate>
+                                    {{ __('View') }}
+                                </flux:button>
+                                <flux:button size="sm" wire:click="startEdit({{ $vendor->id }})">{{ __('Edit') }}</flux:button>
+                                <flux:button
+                                    size="sm"
+                                    variant="danger"
+                                    x-on:click.prevent="(async () => { if (await window.swalConfirmDialog({ title: 'Delete Vendor?', text: 'Vendor ini akan dihapus permanen.', icon: 'warning', confirmButtonText: 'Ya, hapus' })) { $wire.deleteVendor({{ $vendor->id }}) } })()"
+                                >
+                                    {{ __('Delete') }}
+                                </flux:button>
+                            </div>
                         </td>
                     </tr>
                 @empty

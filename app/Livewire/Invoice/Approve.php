@@ -14,7 +14,12 @@ use Livewire\Component;
 #[Title('Invoice Approval')]
 class Approve extends Component
 {
-    public string $statusFilter = 'pending';
+    /**
+     * @var list<int>
+     */
+    public array $selectedInvoiceIds = [];
+
+    public bool $selectAll = false;
 
     /**
      * Mount the component.
@@ -29,7 +34,13 @@ class Approve extends Component
      */
     public function approve(int $invoiceId): void
     {
-        $this->updateStatus($invoiceId, InvoiceStatus::Approved);
+        $invoice = Invoice::query()->findOrFail($invoiceId);
+
+        if (! $this->updateStatus($invoice, InvoiceStatus::Approved)) {
+            return;
+        }
+
+        Flux::toast(variant: 'success', text: __('Invoice approved successfully.'));
     }
 
     /**
@@ -37,22 +48,59 @@ class Approve extends Component
      */
     public function reject(int $invoiceId): void
     {
-        $this->updateStatus($invoiceId, InvoiceStatus::Rejected);
+        $invoice = Invoice::query()->findOrFail($invoiceId);
+
+        if (! $this->updateStatus($invoice, InvoiceStatus::Rejected)) {
+            return;
+        }
+
+        Flux::toast(variant: 'success', text: __('Invoice rejected successfully.'));
+    }
+
+    /**
+     * Bulk approve selected invoices.
+     */
+    public function bulkApprove(): void
+    {
+        $this->bulkUpdateStatus(InvoiceStatus::Approved);
+    }
+
+    /**
+     * Bulk reject selected invoices.
+     */
+    public function bulkReject(): void
+    {
+        $this->bulkUpdateStatus(InvoiceStatus::Rejected);
+    }
+
+    /**
+     * Toggle all pending invoices as selected.
+     */
+    public function updatedSelectAll(bool $checked): void
+    {
+        if (! $checked) {
+            $this->selectedInvoiceIds = [];
+
+            return;
+        }
+
+        $this->selectedInvoiceIds = Invoice::query()
+            ->where('status', InvoiceStatus::Pending)
+            ->pluck('id')
+            ->all();
     }
 
     /**
      * Update invoice status.
      */
-    private function updateStatus(int $invoiceId, InvoiceStatus $status): void
+    private function updateStatus(Invoice $invoice, InvoiceStatus $status): bool
     {
-        $invoice = Invoice::query()->findOrFail($invoiceId);
-
         Gate::authorize('approve', $invoice);
 
         if (! $invoice->hasMedia('invoice-files')) {
-            $this->addError('statusFilter', __('Invoice file must be uploaded before approval.'));
+            $this->addError('selectedInvoiceIds', __('Invoice #:id does not have an uploaded file.', ['id' => $invoice->id]));
 
-            return;
+            return false;
         }
 
         $invoice->update([
@@ -70,17 +118,62 @@ class Approve extends Component
             variant: $status === InvoiceStatus::Approved ? 'success' : 'warning',
         ));
 
-        Flux::toast(variant: 'success', text: __('Invoice status has been updated.'));
+        $this->selectedInvoiceIds = array_values(array_filter(
+            $this->selectedInvoiceIds,
+            fn (int $selectedId): bool => $selectedId !== $invoice->id,
+        ));
+
+        $this->selectAll = false;
+
+        return true;
+    }
+
+    /**
+     * Update selected invoices status in bulk.
+     */
+    private function bulkUpdateStatus(InvoiceStatus $status): void
+    {
+        if ($this->selectedInvoiceIds === []) {
+            $this->addError('selectedInvoiceIds', __('Please select at least one invoice.'));
+
+            return;
+        }
+
+        $updated = 0;
+        $failed = 0;
+
+        $invoices = Invoice::query()
+            ->whereIn('id', $this->selectedInvoiceIds)
+            ->where('status', InvoiceStatus::Pending)
+            ->get();
+
+        foreach ($invoices as $invoice) {
+            if ($this->updateStatus($invoice, $status)) {
+                $updated++;
+            } else {
+                $failed++;
+            }
+        }
+
+        if ($updated > 0) {
+            Flux::toast(
+                variant: 'success',
+                text: $status === InvoiceStatus::Approved
+                    ? __(':count invoice(s) approved.', ['count' => $updated])
+                    : __(':count invoice(s) rejected.', ['count' => $updated]),
+            );
+        }
+
+        if ($failed > 0) {
+            Flux::toast(variant: 'warning', text: __(':count invoice(s) could not be processed.', ['count' => $failed]));
+        }
     }
 
     public function render(): View
     {
         $invoices = Invoice::query()
             ->with(['vendor.user', 'purchaseOrder', 'media'])
-            ->when(
-                $this->statusFilter !== 'all',
-                fn ($query) => $query->where('status', $this->statusFilter),
-            )
+            ->where('status', InvoiceStatus::Pending)
             ->latest()
             ->get();
 

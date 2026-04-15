@@ -3,9 +3,11 @@
 namespace Tests\Feature\Procurement;
 
 use App\Livewire\PO\Create as PoCreate;
+use App\Livewire\PO\Index as PoIndex;
 use App\Models\PurchaseOrder;
 use App\Models\User;
 use App\Models\Vendor;
+use App\PurchaseOrderStatus;
 use App\VendorStatus;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -62,6 +64,53 @@ class PurchaseOrderValidationTest extends TestCase
             'po_id' => $purchaseOrder->id,
             'item_name' => 'Laptop',
             'qty' => 2,
+        ]);
+    }
+
+    public function test_approved_purchase_order_cannot_be_edited_or_deleted(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $procurement = User::factory()->create();
+        $procurement->assignRole('Procurement');
+
+        $purchaseOrder = PurchaseOrder::factory()->create([
+            'created_by' => $procurement->id,
+            'status' => PurchaseOrderStatus::Approved,
+        ]);
+
+        $this->actingAs($procurement)
+            ->get(route('pos.edit', $purchaseOrder))
+            ->assertForbidden();
+
+        Livewire::actingAs($procurement)
+            ->test(PoIndex::class)
+            ->call('deletePurchaseOrder', $purchaseOrder->id)
+            ->assertForbidden();
+    }
+
+    public function test_draft_purchase_order_can_be_edited_and_deleted(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $procurement = User::factory()->create();
+        $procurement->assignRole('Procurement');
+
+        $purchaseOrder = PurchaseOrder::factory()->create([
+            'created_by' => $procurement->id,
+            'status' => PurchaseOrderStatus::Draft,
+        ]);
+
+        $this->actingAs($procurement)
+            ->get(route('pos.edit', $purchaseOrder))
+            ->assertOk();
+
+        Livewire::actingAs($procurement)
+            ->test(PoIndex::class)
+            ->call('deletePurchaseOrder', $purchaseOrder->id);
+
+        $this->assertDatabaseMissing('purchase_orders', [
+            'id' => $purchaseOrder->id,
         ]);
     }
 }

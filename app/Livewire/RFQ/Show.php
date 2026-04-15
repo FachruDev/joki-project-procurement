@@ -44,6 +44,26 @@ class Show extends Component
     }
 
     /**
+     * Delete current RFQ.
+     */
+    public function deleteRfq(): void
+    {
+        Gate::authorize('delete', $this->rfq);
+
+        if ($this->rfq->purchaseOrders()->exists()) {
+            Flux::toast(variant: 'danger', text: __('RFQ with linked purchase orders cannot be deleted.'));
+
+            return;
+        }
+
+        $this->rfq->delete();
+
+        Flux::toast(variant: 'success', text: __('RFQ deleted successfully.'));
+
+        $this->redirect(route('rfqs.my', absolute: false), navigate: true);
+    }
+
+    /**
      * Redirect to PO creation with selected RFQ and vendor.
      */
     public function createPurchaseOrder(): void

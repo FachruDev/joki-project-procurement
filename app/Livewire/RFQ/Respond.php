@@ -23,6 +23,8 @@ class Respond extends Component
 
     public bool $alreadySubmitted = false;
 
+    public ?int $responseId = null;
+
     /**
      * Mount the component.
      */
@@ -42,6 +44,7 @@ class Respond extends Component
 
             if ($response !== null) {
                 $this->alreadySubmitted = true;
+                $this->responseId = $response->id;
                 $this->price = (string) $response->price;
                 $this->notes = $response->notes;
             }
@@ -53,12 +56,6 @@ class Respond extends Component
      */
     public function submit(): void
     {
-        if ($this->alreadySubmitted) {
-            $this->addError('price', __('You have already submitted a response for this RFQ.'));
-
-            return;
-        }
-
         Gate::authorize('submit', [RfqResponse::class, $this->rfq]);
 
         $validated = $this->validate([
@@ -72,43 +69,58 @@ class Respond extends Component
             abort(403);
         }
 
-        $responseExists = RfqResponse::query()
+        $existingResponse = RfqResponse::query()
             ->where('rfq_id', $this->rfq->id)
             ->where('vendor_id', $vendor->id)
-            ->exists();
+            ->first();
 
-        if ($responseExists) {
+        if ($existingResponse !== null) {
+            $existingResponse->update([
+                'price' => $validated['price'],
+                'notes' => $validated['notes'] ?? null,
+            ]);
+
+            $this->responseId = $existingResponse->id;
             $this->alreadySubmitted = true;
-            $this->addError('price', __('You have already submitted a response for this RFQ.'));
+        } else {
+            $createdResponse = RfqResponse::create([
+                'rfq_id' => $this->rfq->id,
+                'vendor_id' => $vendor->id,
+                'price' => $validated['price'],
+                'notes' => $validated['notes'] ?? null,
+            ]);
 
-            return;
+            $this->responseId = $createdResponse->id;
+            $this->alreadySubmitted = true;
         }
-
-        RfqResponse::create([
-            'rfq_id' => $this->rfq->id,
-            'vendor_id' => $vendor->id,
-            'price' => $validated['price'],
-            'notes' => $validated['notes'] ?? null,
-        ]);
 
         $this->rfq->loadMissing('creator');
         if ($this->rfq->creator !== null && ! $this->rfq->creator->is($vendor->user)) {
             $this->rfq->creator->notify(new InAppNotification(
-                title: __('RFQ Response Received'),
-                message: __(':company submitted a response for RFQ \":title\" with price :price.', [
-                    'company' => $vendor->company_name,
-                    'title' => $this->rfq->title,
-                    'price' => number_format((float) $validated['price'], 2),
-                ]),
+                title: $existingResponse !== null ? __('RFQ Response Updated') : __('RFQ Response Received'),
+                message: $existingResponse !== null
+                    ? __(':company updated response for RFQ \":title\" with new price :price.', [
+                        'company' => $vendor->company_name,
+                        'title' => $this->rfq->title,
+                        'price' => number_format((float) $validated['price'], 2),
+                    ])
+                    : __(':company submitted a response for RFQ \":title\" with price :price.', [
+                        'company' => $vendor->company_name,
+                        'title' => $this->rfq->title,
+                        'price' => number_format((float) $validated['price'], 2),
+                    ]),
                 actionUrl: route('rfqs.show', $this->rfq, absolute: false),
                 actionLabel: __('Review RFQ'),
                 variant: 'info',
             ));
         }
 
-        $this->alreadySubmitted = true;
-
-        Flux::toast(variant: 'success', text: __('Response submitted successfully.'));
+        Flux::toast(
+            variant: 'success',
+            text: $existingResponse !== null
+                ? __('Response updated successfully.')
+                : __('Response submitted successfully.'),
+        );
 
         $this->redirect(route('rfqs.show', $this->rfq, absolute: false), navigate: true);
     }

@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\PurchaseOrder;
 use App\Models\User;
+use App\PurchaseOrderStatus;
 use App\VendorStatus;
 
 class PurchaseOrderPolicy
@@ -45,7 +46,63 @@ class PurchaseOrderPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('po.create');
+        if (! $user->can('po.create')) {
+            return false;
+        }
+
+        if ($this->shouldEnforceApprovedVendor($user) && $user->vendor->status !== VendorStatus::Approved) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Determine whether the user can update the model.
+     */
+    public function update(User $user, PurchaseOrder $purchaseOrder): bool
+    {
+        if (! $user->can('po.update')) {
+            return false;
+        }
+
+        if ($this->shouldEnforceApprovedVendor($user) && $user->vendor->status !== VendorStatus::Approved) {
+            return false;
+        }
+
+        if ($purchaseOrder->status !== PurchaseOrderStatus::Draft) {
+            return false;
+        }
+
+        if ($user->can('vendor.manage')) {
+            return true;
+        }
+
+        return $purchaseOrder->created_by === $user->id;
+    }
+
+    /**
+     * Determine whether the user can delete the model.
+     */
+    public function delete(User $user, PurchaseOrder $purchaseOrder): bool
+    {
+        if (! $user->can('po.delete')) {
+            return false;
+        }
+
+        if ($this->shouldEnforceApprovedVendor($user) && $user->vendor->status !== VendorStatus::Approved) {
+            return false;
+        }
+
+        if ($purchaseOrder->status !== PurchaseOrderStatus::Draft) {
+            return false;
+        }
+
+        if ($user->can('vendor.manage')) {
+            return true;
+        }
+
+        return $purchaseOrder->created_by === $user->id;
     }
 
     /**

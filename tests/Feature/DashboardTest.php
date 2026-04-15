@@ -64,7 +64,15 @@ class DashboardTest extends TestCase
 
         $response = $this->actingAs($procurement)->get(route('dashboard'));
 
-        $response->assertOk()->assertSee('RFQ List');
+        $response
+            ->assertOk()
+            ->assertSee('RFQ List')
+            ->assertSee('My RFQ')
+            ->assertSee('My PO')
+            ->assertSee('href="'.route('rfqs.my').'"', false)
+            ->assertSee('href="'.route('pos.my').'"', false)
+            ->assertDontSee('href="'.route('rfqs.create').'"', false)
+            ->assertDontSee('href="'.route('pos.create').'"', false);
     }
 
     public function test_vendor_cannot_see_vendor_summary_cards_without_permission(): void

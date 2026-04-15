@@ -45,7 +45,7 @@ class Dashboard extends Component
         $canViewVendorReport = $user->can('vendor.manage') || $vendor !== null;
         $canViewRfqReport = $user->can('rfq.view');
         $canViewPurchaseReport = $user->can('po.view');
-        $canViewInvoiceReport = $user->can('invoice.approve') || $user->can('invoice.upload');
+        $canViewInvoiceReport = $user->can('invoice.approve') || $user->can('invoice.upload') || $user->can('invoice.view');
 
         $vendorScope = $this->vendorScope($user, $vendor);
 
@@ -161,7 +161,7 @@ class Dashboard extends Component
         $canViewVendorReport = $user->can('vendor.manage') || $vendor !== null;
         $canViewRfqReport = $user->can('rfq.view');
         $canViewPurchaseReport = $user->can('po.view');
-        $canViewInvoiceReport = $user->can('invoice.approve') || $user->can('invoice.upload');
+        $canViewInvoiceReport = $user->can('invoice.approve') || $user->can('invoice.upload') || $user->can('invoice.view');
 
         $vendorScope = $this->vendorScope($user, $vendor);
 

@@ -83,7 +83,7 @@ class Upload extends Component
 
         Flux::toast(variant: 'success', text: __('Invoice uploaded successfully.'));
 
-        $this->redirect(route('pos.show', $this->purchaseOrder, absolute: false), navigate: true);
+        $this->redirect(route('invoices.my', absolute: false), navigate: true);
     }
 
     public function render(): View

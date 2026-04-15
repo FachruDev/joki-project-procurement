@@ -12,7 +12,7 @@
             @can('invoice.approve')
                 <flux:button :href="route('invoices.approve')" wire:navigate>{{ __('Back to Invoice List') }}</flux:button>
             @else
-                <flux:button :href="route('invoices.approved')" wire:navigate>{{ __('Back to Approved Invoices') }}</flux:button>
+                <flux:button :href="route('invoices.my')" wire:navigate>{{ __('Back to My Invoice') }}</flux:button>
             @endcan
         </div>
     </div>
@@ -51,8 +51,11 @@
         <div class="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
             <flux:heading>{{ __('Invoice File') }}</flux:heading>
             <div class="mt-4">
-                @if ($invoice->getFirstMediaUrl('invoice-files') !== '')
-                    <flux:button size="sm" :href="$invoice->getFirstMediaUrl('invoice-files')" target="_blank">
+                @php
+                    $invoiceMedia = $invoice->getFirstMedia('invoice-files');
+                @endphp
+                @if ($invoiceMedia !== null)
+                    <flux:button size="sm" :href="route('media.show', $invoiceMedia)" target="_blank">
                         {{ __('View Uploaded File') }}
                     </flux:button>
                 @else

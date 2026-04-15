@@ -16,6 +16,8 @@ class Center extends Component
 
     public int $limit = 8;
 
+    public int $historyLimit = 30;
+
     /**
      * Mark one notification as read.
      */
@@ -68,6 +70,21 @@ class Center extends Component
         return Auth::user()?->notifications()
             ->latest()
             ->limit($this->limit)
+            ->get() ?? collect();
+    }
+
+    /**
+     * Get read notification history.
+     *
+     * @return Collection<int, DatabaseNotification>
+     */
+    #[Computed]
+    public function readNotifications(): Collection
+    {
+        return Auth::user()?->notifications()
+            ->whereNotNull('read_at')
+            ->latest()
+            ->limit($this->historyLimit)
             ->get() ?? collect();
     }
 

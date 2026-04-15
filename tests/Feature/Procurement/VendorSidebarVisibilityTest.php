@@ -31,8 +31,8 @@ class VendorSidebarVisibilityTest extends TestCase
             ->assertOk()
             ->assertDontSee('RFQ List')
             ->assertDontSee('PO List')
-            ->assertDontSee('My Invoice Upload')
-            ->assertDontSee('Approved Invoices');
+            ->assertDontSee('Invoice List')
+            ->assertDontSee('My Invoice');
     }
 
     public function test_approved_vendor_sidebar_shows_rfq_po_and_invoice_menus(): void
@@ -53,7 +53,7 @@ class VendorSidebarVisibilityTest extends TestCase
             ->assertOk()
             ->assertSee('RFQ List')
             ->assertSee('PO List')
-            ->assertSee('My Invoice Upload')
-            ->assertSee('Approved Invoices');
+            ->assertSee('Invoice List')
+            ->assertSee('My Invoice');
     }
 }

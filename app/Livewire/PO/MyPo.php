@@ -10,8 +10,8 @@ use Illuminate\View\View;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-#[Title('Purchase Orders')]
-class Index extends Component
+#[Title('My PO')]
+class MyPo extends Component
 {
     /**
      * Mount the component.
@@ -39,16 +39,24 @@ class Index extends Component
     {
         $user = Auth::user();
 
+        if ($user === null) {
+            abort(401);
+        }
+
         $orders = PurchaseOrder::query()
             ->with(['vendor.user', 'rfq'])
             ->when(
-                $user?->vendor !== null && $user?->can('vendor.manage') === false,
+                $user->vendor !== null,
                 fn ($query) => $query->where('vendor_id', $user->vendor->id),
+            )
+            ->when(
+                $user->vendor === null && $user->hasRole('Procurement'),
+                fn ($query) => $query->where('created_by', $user->id),
             )
             ->latest()
             ->get();
 
-        return view('livewire.po.index', [
+        return view('livewire.po.my-po', [
             'orders' => $orders,
         ]);
     }

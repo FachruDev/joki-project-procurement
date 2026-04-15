@@ -1,10 +1,29 @@
     <section class="space-y-6">
-        <div>
-            <flux:heading size="xl">{{ __('Purchase Order #') }}{{ $purchaseOrder->id }}</flux:heading>
-            <flux:text class="mt-1">
-                {{ __('Vendor:') }} {{ $purchaseOrder->vendor->company_name }} |
-                {{ __('Status:') }} {{ strtoupper($purchaseOrder->status->value) }}
-            </flux:text>
+        <div class="flex flex-wrap items-start justify-between gap-3">
+            <div>
+                <flux:heading size="xl">{{ __('Purchase Order #') }}{{ $purchaseOrder->id }}</flux:heading>
+                <flux:text class="mt-1">
+                    {{ __('Vendor:') }} {{ $purchaseOrder->vendor->company_name }} |
+                    {{ __('Status:') }} {{ strtoupper($purchaseOrder->status->value) }}
+                </flux:text>
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+                @can('update', $purchaseOrder)
+                    <flux:button :href="route('pos.edit', $purchaseOrder)" wire:navigate>
+                        {{ __('Edit') }}
+                    </flux:button>
+                @endcan
+
+                @can('delete', $purchaseOrder)
+                    <flux:button
+                        variant="danger"
+                        x-on:click.prevent="(async () => { if (await window.swalConfirmDialog({ title: 'Delete PO?', text: 'Purchase order ini akan dihapus permanen.', icon: 'warning', confirmButtonText: 'Ya, hapus' })) { $wire.deletePurchaseOrder() } })()"
+                    >
+                        {{ __('Delete') }}
+                    </flux:button>
+                @endcan
+            </div>
         </div>
 
         <div class="rounded-lg border border-zinc-200 p-5 dark:border-zinc-700">
@@ -60,8 +79,11 @@
                 <flux:text class="mt-2">
                     {{ __('Status:') }} {{ strtoupper($purchaseOrder->invoice->status->value) }}
                 </flux:text>
-                @if ($purchaseOrder->invoice->getFirstMediaUrl('invoice-files') !== '')
-                    <a href="{{ $purchaseOrder->invoice->getFirstMediaUrl('invoice-files') }}" target="_blank" class="mt-2 inline-block text-blue-600 underline dark:text-blue-400">
+                @php
+                    $invoiceMedia = $purchaseOrder->invoice->getFirstMedia('invoice-files');
+                @endphp
+                @if ($invoiceMedia !== null)
+                    <a href="{{ route('media.show', $invoiceMedia) }}" target="_blank" class="mt-2 inline-block text-blue-600 underline dark:text-blue-400">
                         {{ __('View Invoice File') }}
                     </a>
                 @endif
