@@ -92,6 +92,7 @@ class DashboardTest extends TestCase
         $response
             ->assertOk()
             ->assertDontSee('Total Vendor')
-            ->assertDontSee('Vendor Approved vs Pending');
+            ->assertDontSee('Vendor Approved vs Pending')
+            ->assertDontSee('Vendor Report');
     }
 }

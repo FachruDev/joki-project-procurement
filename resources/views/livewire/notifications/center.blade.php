@@ -1,4 +1,4 @@
-<div wire:poll.20s>
+<div @if (! $showHistoryModal) wire:poll.20s @endif>
     @php
         $normalizeNotificationUrl = static function (?string $url): ?string {
             if ($url === null || $url === '') {
@@ -41,11 +41,9 @@
             <div class="flex items-center justify-between px-3 py-2">
                 <flux:heading>{{ __('Notifications') }}</flux:heading>
                 <div class="flex items-center gap-3">
-                    <flux:modal.trigger name="notification-history-modal">
-                        <button type="button" class="text-xs text-zinc-600 hover:underline dark:text-zinc-300">
-                            {{ __('View history') }}
-                        </button>
-                    </flux:modal.trigger>
+                    <button type="button" wire:click="openHistoryModal" class="text-xs text-zinc-600 hover:underline dark:text-zinc-300">
+                        {{ __('View history') }}
+                    </button>
 
                     @if ($this->unreadCount > 0)
                         <button type="button" wire:click="markAllAsRead" class="text-xs text-blue-600 hover:underline dark:text-blue-400">
@@ -113,62 +111,68 @@
         </flux:menu>
     </flux:dropdown>
 
-    <flux:modal name="notification-history-modal" class="max-w-2xl">
-        <div class="space-y-4">
-            <div>
-                <flux:heading size="lg">{{ __('Notification History') }}</flux:heading>
-                <flux:text class="mt-1">{{ __('Read notifications history.') }}</flux:text>
-            </div>
+    @if ($showHistoryModal)
+        <div class="fixed inset-0 z-[90] flex items-center justify-center px-4 py-6">
+            <button type="button" class="absolute inset-0 bg-black/55" wire:click="closeHistoryModal" aria-label="{{ __('Close') }}"></button>
 
-            <div class="max-h-[60vh] space-y-3 overflow-y-auto rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
-                @forelse ($this->readNotifications as $notification)
-                    <div class="space-y-2 rounded-md border border-zinc-100 p-3 dark:border-zinc-800">
-                        <div class="flex items-start justify-between gap-2">
-                            <div>
-                                <div class="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                                    {{ $notification->data['title'] ?? __('Notification') }}
+            <div class="relative z-10 w-full max-w-2xl overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-2xl dark:border-zinc-700 dark:bg-zinc-900">
+                <div class="flex items-center justify-between border-b border-zinc-200 px-5 py-4 dark:border-zinc-700">
+                    <div>
+                        <flux:heading size="lg">{{ __('Notification History') }}</flux:heading>
+                        <flux:text class="mt-1">{{ __('Read notifications history.') }}</flux:text>
+                    </div>
+
+                    <flux:button size="sm" variant="ghost" wire:click="closeHistoryModal">
+                        {{ __('Close') }}
+                    </flux:button>
+                </div>
+
+                <div class="max-h-[70vh] overflow-y-auto p-4">
+                    <div class="space-y-3">
+                        @forelse ($this->readNotifications as $notification)
+                            <div class="space-y-2 rounded-md border border-zinc-100 p-3 dark:border-zinc-800">
+                                <div class="flex items-start justify-between gap-2">
+                                    <div>
+                                        <div class="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                                            {{ $notification->data['title'] ?? __('Notification') }}
+                                        </div>
+                                        <div class="mt-0.5 text-xs text-zinc-600 dark:text-zinc-400">
+                                            {{ __('Read:') }} {{ $notification->read_at?->diffForHumans() }}
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="mt-0.5 text-xs text-zinc-600 dark:text-zinc-400">
-                                    {{ __('Read:') }} {{ $notification->read_at?->diffForHumans() }}
+
+                                <p class="text-sm text-zinc-700 dark:text-zinc-300">
+                                    {{ \Illuminate\Support\Str::limit($notification->data['message'] ?? '', 180) }}
+                                </p>
+
+                                <div class="flex items-center gap-3 text-xs">
+                                    @php
+                                        $historyActionUrl = $normalizeNotificationUrl($notification->data['action_url'] ?? null);
+                                    @endphp
+                                    @if (! empty($historyActionUrl))
+                                        <a href="{{ $historyActionUrl }}" class="text-blue-600 hover:underline dark:text-blue-400">
+                                            {{ $notification->data['action_label'] ?? __('Open') }}
+                                        </a>
+                                    @endif
+
+                                    <button
+                                        type="button"
+                                        class="text-red-600 hover:underline dark:text-red-400"
+                                        x-on:click.prevent="(async () => { if (await window.swalConfirmDialog({ title: 'Hapus Notifikasi?', text: 'Notifikasi ini akan dihapus dari riwayat.', confirmButtonText: 'Ya, hapus' })) { $wire.deleteNotification('{{ $notification->id }}') } })()"
+                                    >
+                                        {{ __('Delete') }}
+                                    </button>
                                 </div>
                             </div>
-                        </div>
-
-                        <p class="text-sm text-zinc-700 dark:text-zinc-300">
-                            {{ \Illuminate\Support\Str::limit($notification->data['message'] ?? '', 180) }}
-                        </p>
-
-                        <div class="flex items-center gap-3 text-xs">
-                            @php
-                                $historyActionUrl = $normalizeNotificationUrl($notification->data['action_url'] ?? null);
-                            @endphp
-                            @if (! empty($historyActionUrl))
-                                <a href="{{ $historyActionUrl }}" class="text-blue-600 hover:underline dark:text-blue-400">
-                                    {{ $notification->data['action_label'] ?? __('Open') }}
-                                </a>
-                            @endif
-
-                            <button
-                                type="button"
-                                class="text-red-600 hover:underline dark:text-red-400"
-                                x-on:click.prevent="(async () => { if (await window.swalConfirmDialog({ title: 'Hapus Notifikasi?', text: 'Notifikasi ini akan dihapus dari riwayat.', confirmButtonText: 'Ya, hapus' })) { $wire.deleteNotification('{{ $notification->id }}') } })()"
-                            >
-                                {{ __('Delete') }}
-                            </button>
-                        </div>
+                        @empty
+                            <div class="rounded-lg border border-zinc-200 py-8 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
+                                {{ __('No read notifications yet.') }}
+                            </div>
+                        @endforelse
                     </div>
-                @empty
-                    <div class="py-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
-                        {{ __('No read notifications yet.') }}
-                    </div>
-                @endforelse
-            </div>
-
-            <div class="flex justify-end">
-                <flux:modal.close>
-                    <flux:button variant="filled">{{ __('Close') }}</flux:button>
-                </flux:modal.close>
+                </div>
             </div>
         </div>
-    </flux:modal>
+    @endif
 </div>

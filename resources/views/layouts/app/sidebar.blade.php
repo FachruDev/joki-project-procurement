@@ -26,10 +26,16 @@
                         && $currentUser->can('vendor.manage') === false;
                 @endphp
 
-                <flux:sidebar.group icon="home" :heading="__('Main')" expandable :expanded="request()->routeIs('dashboard')">
+                <flux:sidebar.group icon="home" :heading="__('Main')" expandable :expanded="request()->routeIs('dashboard') || request()->routeIs('reports.index')">
                     <flux:sidebar.item :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
                         {{ __('Dashboard') }}
                     </flux:sidebar.item>
+
+                    @can('report.view')
+                        <flux:sidebar.item :href="route('reports.index')" :current="request()->routeIs('reports.index')" wire:navigate>
+                            {{ __('Reports') }}
+                        </flux:sidebar.item>
+                    @endcan
                 </flux:sidebar.group>
 
                 @if (auth()->user()->can('user.manage') || auth()->user()->can('permission.manage'))

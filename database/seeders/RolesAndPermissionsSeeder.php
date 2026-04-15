@@ -39,6 +39,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'invoice.upload',
             'invoice.approve',
             'report.vendor.summary',
+            'report.view',
             'user.manage',
             'permission.manage',
         ];
@@ -68,6 +69,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'gr.create',
             'invoice.view',
             'report.vendor.summary',
+            'report.view',
         ]);
 
         $vendorRole->syncPermissions([

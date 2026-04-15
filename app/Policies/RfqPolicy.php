@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\Rfq;
 use App\Models\User;
+use App\RfqStatus;
 use App\VendorStatus;
 
 class RfqPolicy
@@ -82,6 +83,10 @@ class RfqPolicy
     public function delete(User $user, Rfq $rfq): bool
     {
         if (! $user->can('rfq.delete')) {
+            return false;
+        }
+
+        if ($rfq->status === RfqStatus::Closed) {
             return false;
         }
 

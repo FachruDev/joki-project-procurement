@@ -15,6 +15,7 @@ use App\Livewire\PO\Edit as PoEdit;
 use App\Livewire\PO\Index as PoIndex;
 use App\Livewire\PO\MyPo;
 use App\Livewire\PO\Show as PoShow;
+use App\Livewire\Report\Index as ReportIndex;
 use App\Livewire\RFQ\Create as RfqCreate;
 use App\Livewire\RFQ\Edit as RfqEdit;
 use App\Livewire\RFQ\Index as RfqIndex;
@@ -32,6 +33,10 @@ Route::view('/', 'welcome')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('dashboard', Dashboard::class)->name('dashboard');
+
+    Route::livewire('reports', ReportIndex::class)
+        ->middleware('permission:report.view')
+        ->name('reports.index');
 
     Route::get('media/{media}', MediaFileController::class)->name('media.show');
 

@@ -42,7 +42,7 @@ class Dashboard extends Component
         $vendor = $user->vendor;
 
         $canViewVendorSummary = $user->can('report.vendor.summary');
-        $canViewVendorReport = $user->can('vendor.manage') || $vendor !== null;
+        $canViewVendorReport = $this->canViewVendorReport($user);
         $canViewRfqReport = $user->can('rfq.view');
         $canViewPurchaseReport = $user->can('po.view');
         $canViewInvoiceReport = $user->can('invoice.approve') || $user->can('invoice.upload') || $user->can('invoice.view');
@@ -158,7 +158,7 @@ class Dashboard extends Component
         $vendor = $user->vendor;
 
         $canViewVendorSummary = $user->can('report.vendor.summary');
-        $canViewVendorReport = $user->can('vendor.manage') || $vendor !== null;
+        $canViewVendorReport = $this->canViewVendorReport($user);
         $canViewRfqReport = $user->can('rfq.view');
         $canViewPurchaseReport = $user->can('po.view');
         $canViewInvoiceReport = $user->can('invoice.approve') || $user->can('invoice.upload') || $user->can('invoice.view');
@@ -273,6 +273,18 @@ class Dashboard extends Component
         }
 
         return $query;
+    }
+
+    /**
+     * Determine if vendor report section should be visible.
+     */
+    private function canViewVendorReport(User $user): bool
+    {
+        if ($user->hasRole('Vendor')) {
+            return false;
+        }
+
+        return $user->can('vendor.manage');
     }
 
     private function rfqScope(?Vendor $vendor): Builder

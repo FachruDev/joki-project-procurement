@@ -18,6 +18,8 @@ class Center extends Component
 
     public int $historyLimit = 30;
 
+    public bool $showHistoryModal = false;
+
     /**
      * Mark one notification as read.
      */
@@ -48,6 +50,22 @@ class Center extends Component
     public function deleteNotification(string $notificationId): void
     {
         Auth::user()?->notifications()->whereKey($notificationId)->delete();
+    }
+
+    /**
+     * Open notification history modal.
+     */
+    public function openHistoryModal(): void
+    {
+        $this->showHistoryModal = true;
+    }
+
+    /**
+     * Close notification history modal.
+     */
+    public function closeHistoryModal(): void
+    {
+        $this->showHistoryModal = false;
     }
 
     /**

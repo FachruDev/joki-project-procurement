@@ -3,6 +3,7 @@
 namespace App\Livewire\RFQ;
 
 use App\Models\Rfq;
+use App\RfqStatus;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -29,6 +30,12 @@ class Index extends Component
         $rfq = Rfq::query()->findOrFail($rfqId);
 
         Gate::authorize('delete', $rfq);
+
+        if ($rfq->status === RfqStatus::Closed) {
+            Flux::toast(variant: 'warning', text: __('Closed RFQ cannot be deleted.'));
+
+            return;
+        }
 
         if ($rfq->purchaseOrders()->exists()) {
             Flux::toast(variant: 'danger', text: __('RFQ with linked purchase orders cannot be deleted.'));

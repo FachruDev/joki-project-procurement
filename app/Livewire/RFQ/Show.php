@@ -4,13 +4,16 @@ namespace App\Livewire\RFQ;
 
 use App\Models\PurchaseOrder;
 use App\Models\Rfq;
+use App\Models\RfqResponse;
 use App\RfqStatus;
 use Flux\Flux;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Spatie\Activitylog\Models\Activity;
 
 #[Title('RFQ Details')]
 class Show extends Component
@@ -18,6 +21,10 @@ class Show extends Component
     public Rfq $rfq;
 
     public ?int $selectedVendorId = null;
+
+    public ?int $selectedResponseId = null;
+
+    public bool $showResponseHistoryModal = false;
 
     /**
      * Mount the component.
@@ -49,6 +56,12 @@ class Show extends Component
     public function deleteRfq(): void
     {
         Gate::authorize('delete', $this->rfq);
+
+        if ($this->rfq->status === RfqStatus::Closed) {
+            Flux::toast(variant: 'warning', text: __('Closed RFQ cannot be deleted.'));
+
+            return;
+        }
 
         if ($this->rfq->purchaseOrders()->exists()) {
             Flux::toast(variant: 'danger', text: __('RFQ with linked purchase orders cannot be deleted.'));
@@ -86,6 +99,48 @@ class Show extends Component
         );
     }
 
+    /**
+     * Open response change history for a selected vendor response.
+     */
+    public function openResponseHistory(int $responseId): void
+    {
+        Gate::authorize('view', $this->rfq);
+
+        $responseExists = $this->rfq->responses()
+            ->whereKey($responseId)
+            ->exists();
+
+        if (! $responseExists) {
+            abort(404);
+        }
+
+        $this->selectedResponseId = $responseId;
+        $this->showResponseHistoryModal = true;
+    }
+
+    /**
+     * Close response history modal.
+     */
+    public function closeResponseHistory(): void
+    {
+        $this->showResponseHistoryModal = false;
+    }
+
+    /**
+     * Get selected response model.
+     */
+    private function selectedResponse(Collection $responses): ?RfqResponse
+    {
+        if ($this->selectedResponseId === null) {
+            return null;
+        }
+
+        /** @var ?RfqResponse $response */
+        $response = $responses->firstWhere('id', $this->selectedResponseId);
+
+        return $response;
+    }
+
     public function render(): View
     {
         $rfq = $this->rfq->load([
@@ -94,8 +149,22 @@ class Show extends Component
             'responses.vendor.user',
         ]);
 
+        $selectedResponse = $this->selectedResponse($rfq->responses);
+        $responseHistoryLogs = collect();
+
+        if ($selectedResponse !== null) {
+            $responseHistoryLogs = Activity::query()
+                ->where('subject_type', RfqResponse::class)
+                ->where('subject_id', $selectedResponse->id)
+                ->with('causer')
+                ->latest()
+                ->get();
+        }
+
         return view('livewire.rfq.show', [
             'rfq' => $rfq,
+            'selectedResponse' => $selectedResponse,
+            'responseHistoryLogs' => $responseHistoryLogs,
         ]);
     }
 }

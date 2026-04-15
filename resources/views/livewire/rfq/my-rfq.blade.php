@@ -58,13 +58,15 @@
                                 @endcan
 
                                 @can('delete', $rfq)
-                                    <flux:button
-                                        size="sm"
-                                        variant="danger"
-                                        x-on:click.prevent="(async () => { if (await window.swalConfirmDialog({ title: 'Delete RFQ?', text: 'RFQ ini akan dihapus permanen.', icon: 'warning', confirmButtonText: 'Ya, hapus' })) { $wire.deleteRfq({{ $rfq->id }}) } })()"
-                                    >
-                                        {{ __('Delete') }}
-                                    </flux:button>
+                                    @if ($rfq->status->value === 'open')
+                                        <flux:button
+                                            size="sm"
+                                            variant="danger"
+                                            x-on:click.prevent="(async () => { if (await window.swalConfirmDialog({ title: 'Delete RFQ?', text: 'RFQ ini akan dihapus permanen.', icon: 'warning', confirmButtonText: 'Ya, hapus' })) { $wire.deleteRfq({{ $rfq->id }}) } })()"
+                                        >
+                                            {{ __('Delete') }}
+                                        </flux:button>
+                                    @endif
                                 @endcan
                             </div>
                         </td>
