@@ -8,9 +8,20 @@
                 </flux:text>
             </div>
 
-            <flux:button :href="route('dashboard')" wire:navigate>
-                {{ __('Back to Dashboard') }}
-            </flux:button>
+            <div class="flex flex-wrap gap-2">
+                @if ($canExportReport)
+                    <flux:button
+                        icon="arrow-down-tray"
+                        x-on:click.prevent="(async () => { if (await window.swalConfirmDialog({ title: 'Export Report?', text: 'Laporan sistem akan diunduh dalam format Excel.', icon: 'question', confirmButtonText: 'Ya, export' })) { $wire.exportToExcel() } })()"
+                    >
+                        {{ __('Export Excel') }}
+                    </flux:button>
+                @endif
+
+                <flux:button :href="route('dashboard')" wire:navigate>
+                    {{ __('Back to Dashboard') }}
+                </flux:button>
+            </div>
         </div>
     </div>
 

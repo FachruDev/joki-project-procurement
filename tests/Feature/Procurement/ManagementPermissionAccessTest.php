@@ -2,8 +2,10 @@
 
 namespace Tests\Feature\Procurement;
 
+use App\Livewire\Admin\PermissionForm;
 use App\Livewire\Admin\PermissionManagement;
-use App\Livewire\Admin\UserManagement;
+use App\Livewire\Admin\RoleForm;
+use App\Livewire\Admin\UserForm;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -32,47 +34,79 @@ class ManagementPermissionAccessTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_user_with_user_manage_permission_can_access_user_management_page(): void
+    public function test_user_with_user_manage_permission_can_access_user_management_routes(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
 
         $user = User::factory()->create();
         $user->givePermissionTo('user.manage');
 
+        $targetUser = User::factory()->create();
+
         $this->actingAs($user)
             ->get(route('management.users'))
             ->assertOk();
+
+        $this->actingAs($user)
+            ->get(route('management.users.create'))
+            ->assertOk();
+
+        $this->actingAs($user)
+            ->get(route('management.users.edit', $targetUser))
+            ->assertOk();
+
+        $this->actingAs($user)
+            ->get(route('management.users.profile', $targetUser))
+            ->assertOk();
     }
 
-    public function test_user_with_permission_manage_permission_can_access_role_permission_page(): void
+    public function test_user_with_permission_manage_permission_can_access_role_permission_routes(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
 
         $user = User::factory()->create();
         $user->givePermissionTo('permission.manage');
 
+        $role = Role::query()->where('name', 'Vendor')->firstOrFail();
+        $permission = Permission::query()->where('name', 'rfq.view')->firstOrFail();
+
         $this->actingAs($user)
             ->get(route('management.permissions'))
             ->assertOk();
+
+        $this->actingAs($user)
+            ->get(route('management.roles.create'))
+            ->assertOk();
+
+        $this->actingAs($user)
+            ->get(route('management.roles.edit', $role))
+            ->assertOk();
+
+        $this->actingAs($user)
+            ->get(route('management.permissions.create'))
+            ->assertOk();
+
+        $this->actingAs($user)
+            ->get(route('management.permissions.edit', $permission))
+            ->assertOk();
     }
 
-    public function test_user_management_can_create_user_with_role_assignment(): void
+    public function test_user_form_can_create_user_with_role_assignment(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
 
         $admin = User::factory()->create();
-        $admin->assignRole('Admin');
+        $admin->givePermissionTo('user.manage');
         $vendorRoleId = Role::query()->where('name', 'Vendor')->value('id');
 
         Livewire::actingAs($admin)
-            ->test(UserManagement::class)
-            ->call('prepareCreateUser')
+            ->test(UserForm::class)
             ->set('name', 'Created User')
             ->set('email', 'created.user@example.test')
             ->set('password', 'password123')
             ->set('passwordConfirmation', 'password123')
             ->set('selectedRoleIds', [$vendorRoleId])
-            ->call('createUser')
+            ->call('save')
             ->assertHasNoErrors();
 
         $createdUser = User::query()->where('email', 'created.user@example.test')->first();
@@ -81,25 +115,25 @@ class ManagementPermissionAccessTest extends TestCase
         $this->assertTrue($createdUser->hasRole('Vendor'));
     }
 
-    public function test_superadmin_user_assignments_are_protected_from_modification(): void
+    public function test_superadmin_user_profile_is_protected_from_modification(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
 
         $admin = User::factory()->create();
-        $admin->assignRole('Admin');
+        $admin->givePermissionTo('user.manage');
 
         $superAdminUser = User::query()->where('email', 'superadmin@procurement.test')->firstOrFail();
-        $vendorRoleId = Role::query()->where('name', 'Vendor')->value('id');
 
         Livewire::actingAs($admin)
-            ->test(UserManagement::class)
-            ->call('selectUser', $superAdminUser->id)
-            ->set('selectedRoleIds', [$vendorRoleId])
-            ->set('selectedPermissionIds', [])
-            ->call('saveAssignments')
-            ->assertHasErrors('selectedUserId');
+            ->test(UserForm::class, ['user' => $superAdminUser])
+            ->set('name', 'Modified Super Admin')
+            ->call('save')
+            ->assertHasErrors('name');
 
-        $this->assertTrue($superAdminUser->fresh()->hasRole('SuperAdmin'));
+        $freshSuperAdmin = $superAdminUser->fresh();
+
+        $this->assertTrue($freshSuperAdmin->hasRole('SuperAdmin'));
+        $this->assertSame('superadmin', $freshSuperAdmin->name);
     }
 
     public function test_superadmin_role_permissions_can_be_updated(): void
@@ -107,7 +141,7 @@ class ManagementPermissionAccessTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
 
         $admin = User::factory()->create();
-        $admin->assignRole('Admin');
+        $admin->givePermissionTo('permission.manage');
 
         $superAdminRole = Role::query()->where('name', 'SuperAdmin')->firstOrFail();
         $permissionId = Permission::query()->where('name', 'rfq.view')->value('id');
@@ -127,17 +161,32 @@ class ManagementPermissionAccessTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
 
         $admin = User::factory()->create();
-        $admin->assignRole('Admin');
+        $admin->givePermissionTo('permission.manage');
 
         $superAdminRole = Role::query()->where('name', 'SuperAdmin')->firstOrFail();
 
         Livewire::actingAs($admin)
-            ->test(PermissionManagement::class)
-            ->call('startEditingRole', $superAdminRole->id)
-            ->set('editingRoleName', 'Chief Administrator')
-            ->call('updateRole')
-            ->assertHasErrors('editingRoleName');
+            ->test(RoleForm::class, ['role' => $superAdminRole])
+            ->set('roleName', 'Chief Administrator')
+            ->call('save')
+            ->assertHasErrors('roleName');
 
         $this->assertSame('SuperAdmin', $superAdminRole->fresh()->name);
+    }
+
+    public function test_permission_form_can_create_permission(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $admin = User::factory()->create();
+        $admin->givePermissionTo('permission.manage');
+
+        Livewire::actingAs($admin)
+            ->test(PermissionForm::class)
+            ->set('permissionName', 'report.audit')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertTrue(Permission::query()->where('name', 'report.audit')->exists());
     }
 }

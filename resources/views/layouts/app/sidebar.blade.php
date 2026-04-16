@@ -41,13 +41,13 @@
                 @if (auth()->user()->can('user.manage') || auth()->user()->can('permission.manage'))
                     <flux:sidebar.group icon="shield-check" :heading="__('Administration')" expandable :expanded="request()->routeIs('management.*')">
                         @can('user.manage')
-                            <flux:sidebar.item :href="route('management.users')" :current="request()->routeIs('management.users')" wire:navigate>
+                            <flux:sidebar.item :href="route('management.users')" :current="request()->routeIs('management.users*')" wire:navigate>
                                 {{ __('User Management') }}
                             </flux:sidebar.item>
                         @endcan
 
                         @can('permission.manage')
-                            <flux:sidebar.item :href="route('management.permissions')" :current="request()->routeIs('management.permissions')" wire:navigate>
+                            <flux:sidebar.item :href="route('management.permissions')" :current="request()->routeIs('management.permissions*') || request()->routeIs('management.roles.*')" wire:navigate>
                                 {{ __('Role & Permission') }}
                             </flux:sidebar.item>
                         @endcan

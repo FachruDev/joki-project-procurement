@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Report;
 
+use App\Actions\Exports\SystemReportExport;
 use App\InvoiceStatus;
 use App\Models\Invoice;
 use App\Models\PurchaseOrder;
@@ -15,6 +16,8 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 #[Title('System Reports')]
 class Index extends Component
@@ -25,6 +28,49 @@ class Index extends Component
     public function mount(): void
     {
         Gate::authorize('report.view');
+    }
+
+    /**
+     * Export system report to Excel.
+     */
+    public function exportToExcel(): BinaryFileResponse
+    {
+        Gate::authorize('report.export');
+
+        $vendorStatusCounts = $this->vendorStatusCounts();
+        $rfqStatusCounts = $this->rfqStatusCounts();
+        $purchaseOrderStatus = $this->purchaseOrderStatus();
+        $invoiceStatusCounts = $this->invoiceStatusCounts();
+        $monthlyComparisons = $this->monthlyComparisons();
+        $topVendors = $this->topVendors();
+
+        return Excel::download(
+            new SystemReportExport(
+                summary: [
+                    'total_vendor' => array_sum($vendorStatusCounts),
+                    'total_rfq' => array_sum($rfqStatusCounts),
+                    'total_po' => array_sum(array_column($purchaseOrderStatus, 'count')),
+                    'total_invoice' => array_sum($invoiceStatusCounts),
+                ],
+                vendorStatusCounts: $vendorStatusCounts,
+                rfqStatusCounts: $rfqStatusCounts,
+                purchaseOrderStatus: $purchaseOrderStatus,
+                invoiceStatusCounts: $invoiceStatusCounts,
+                monthlyComparisons: $monthlyComparisons
+                    ->map(fn (array $row): array => $row)
+                    ->all(),
+                topVendors: $topVendors
+                    ->map(fn (Vendor $vendor): array => [
+                        'vendor' => $vendor->company_name,
+                        'contact' => $vendor->user?->name ?? '-',
+                        'rfq_joined' => (int) $vendor->rfqs_count,
+                        'po_count' => (int) $vendor->purchase_orders_count,
+                        'total_transaction' => (float) ($vendor->total_transaction_amount ?? 0),
+                    ])
+                    ->all(),
+            ),
+            'system-report-'.now()->format('Ymd_His').'.xlsx',
+        );
     }
 
     public function render(): View
@@ -42,6 +88,7 @@ class Index extends Component
         $totalInvoice = array_sum($invoiceStatusCounts);
 
         return view('livewire.report.index', [
+            'canExportReport' => Gate::allows('report.export'),
             'vendorStatusCounts' => $vendorStatusCounts,
             'rfqStatusCounts' => $rfqStatusCounts,
             'purchaseOrderStatus' => $purchaseOrderStatus,

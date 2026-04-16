@@ -40,6 +40,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'invoice.approve',
             'report.vendor.summary',
             'report.view',
+            'report.export',
             'user.manage',
             'permission.manage',
         ];
@@ -70,6 +71,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'invoice.view',
             'report.vendor.summary',
             'report.view',
+            'report.export',
         ]);
 
         $vendorRole->syncPermissions([

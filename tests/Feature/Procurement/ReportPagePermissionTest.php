@@ -2,11 +2,15 @@
 
 namespace Tests\Feature\Procurement;
 
+use App\Livewire\Report\Index as ReportIndex;
 use App\Models\User;
 use App\Models\Vendor;
 use App\VendorStatus;
+use Carbon\CarbonImmutable;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
+use Maatwebsite\Excel\Facades\Excel;
 use Tests\TestCase;
 
 class ReportPagePermissionTest extends TestCase
@@ -67,5 +71,27 @@ class ReportPagePermissionTest extends TestCase
             ->assertOk()
             ->assertDontSee('href="'.route('reports.index').'"', false)
             ->assertDontSee('Reports');
+    }
+
+    public function test_report_page_can_export_excel_for_user_with_report_permission(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        CarbonImmutable::setTestNow('2026-04-16 10:30:00');
+
+        try {
+            Excel::fake();
+
+            $procurement = User::factory()->create();
+            $procurement->assignRole('Procurement');
+
+            Livewire::actingAs($procurement)
+                ->test(ReportIndex::class)
+                ->call('exportToExcel');
+
+            Excel::assertDownloaded('system-report-20260416_103000.xlsx');
+        } finally {
+            CarbonImmutable::setTestNow();
+        }
     }
 }
