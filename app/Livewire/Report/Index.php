@@ -86,9 +86,37 @@ class Index extends Component
         $totalRfq = array_sum($rfqStatusCounts);
         $totalPo = array_sum(array_column($purchaseOrderStatus, 'count'));
         $totalInvoice = array_sum($invoiceStatusCounts);
+        $activePurchaseOrder = ($purchaseOrderStatus['draft']['count'] ?? 0) + ($purchaseOrderStatus['approved']['count'] ?? 0);
+
+        $chartData = [
+            'vendorStatus' => [
+                'labels' => [__('Approved'), __('Pending'), __('Rejected')],
+                'data' => [
+                    $vendorStatusCounts['approved'] ?? 0,
+                    $vendorStatusCounts['pending'] ?? 0,
+                    $vendorStatusCounts['rejected'] ?? 0,
+                ],
+            ],
+            'operationalSnapshot' => [
+                'labels' => [__('RFQ Open'), __('PO Active'), __('Invoice Pending')],
+                'data' => [
+                    $rfqStatusCounts['open'] ?? 0,
+                    $activePurchaseOrder,
+                    $invoiceStatusCounts['pending'] ?? 0,
+                ],
+            ],
+            'monthlyTrend' => [
+                'labels' => $monthlyComparisons->pluck('label')->all(),
+                'vendors' => $monthlyComparisons->pluck('vendors')->all(),
+                'rfqs' => $monthlyComparisons->pluck('rfqs')->all(),
+                'pos' => $monthlyComparisons->pluck('pos')->all(),
+                'invoices' => $monthlyComparisons->pluck('invoices')->all(),
+            ],
+        ];
 
         return view('livewire.report.index', [
             'canExportReport' => Gate::allows('report.export'),
+            'chartData' => $chartData,
             'vendorStatusCounts' => $vendorStatusCounts,
             'rfqStatusCounts' => $rfqStatusCounts,
             'purchaseOrderStatus' => $purchaseOrderStatus,

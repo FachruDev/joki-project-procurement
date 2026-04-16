@@ -38,7 +38,13 @@ class ReportPagePermissionTest extends TestCase
         $this->actingAs($procurement)
             ->get(route('reports.index'))
             ->assertOk()
-            ->assertSee('System Comparison Report');
+            ->assertSee('System Comparison Report')
+            ->assertSee('id="vendor-status-chart"', false)
+            ->assertSee('id="operational-snapshot-chart"', false)
+            ->assertSee('id="monthly-trend-chart"', false)
+            ->assertSee("type: 'doughnut'", false)
+            ->assertSee("type: 'bar'", false)
+            ->assertSee("type: 'line'", false);
 
         $this->actingAs($vendorUser)
             ->get(route('reports.index'))

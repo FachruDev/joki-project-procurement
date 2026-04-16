@@ -8,6 +8,7 @@
     <flux:sidebar.profile
         :name="auth()->user()->name"
         :initials="auth()->user()->initials()"
+        :avatar="$profileImageUrl"
         icon:trailing="chevrons-up-down"
         data-test="sidebar-menu-button"
     />

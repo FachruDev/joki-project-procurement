@@ -141,6 +141,7 @@
             <flux:dropdown position="top" align="end">
                 <flux:profile
                     :initials="auth()->user()->initials()"
+                    :avatar="$profileImageUrl"
                     icon-trailing="chevron-down"
                 />
 
