@@ -24,6 +24,9 @@
                     $isPendingVendorWithoutManagement = $currentUser->vendor !== null
                         && $isApprovedVendor === false
                         && $currentUser->can('vendor.manage') === false;
+                    $profileRoute = $currentUser->can('rfq.respond') ? route('vendor.profile') : route('profile.edit');
+                    $profileMedia = $currentUser->getFirstMedia('profile-images');
+                    $profileImageUrl = $profileMedia !== null ? route('media.show', $profileMedia) : null;
                 @endphp
 
                 <flux:sidebar.group icon="home" :heading="__('Main')" expandable :expanded="request()->routeIs('dashboard') || request()->routeIs('reports.index')">
@@ -148,6 +151,7 @@
                                 <flux:avatar
                                     :name="auth()->user()->name"
                                     :initials="auth()->user()->initials()"
+                                    :src="$profileImageUrl"
                                 />
 
                                 <div class="grid flex-1 text-start text-sm leading-tight">
@@ -175,7 +179,7 @@
                     <flux:menu.separator />
 
                     <flux:menu.radio.group>
-                        <flux:menu.item :href="route('profile.edit')" icon="cog" wire:navigate>
+                        <flux:menu.item :href="$profileRoute" icon="cog" wire:navigate>
                             {{ __('Settings') }}
                         </flux:menu.item>
                     </flux:menu.radio.group>

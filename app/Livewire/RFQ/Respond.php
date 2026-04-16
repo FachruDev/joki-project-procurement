@@ -109,7 +109,7 @@ class Respond extends Component
                         'title' => $this->rfq->title,
                         'price' => number_format((float) $validated['price'], 2),
                     ]),
-                actionUrl: route('rfqs.show', $this->rfq, absolute: false),
+                actionUrl: route('rfqs.show', $this->rfq),
                 actionLabel: __('Review RFQ'),
                 variant: 'info',
             ));

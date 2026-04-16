@@ -4,6 +4,10 @@
         @include('partials.head')
     </head>
     <body class="min-h-screen bg-white dark:bg-zinc-800">
+        @php
+            $profileRoute = auth()->user()->can('rfq.respond') ? route('vendor.profile') : route('profile.edit');
+        @endphp
+
         <flux:header container class="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
             <flux:sidebar.toggle class="lg:hidden mr-2" icon="bars-2" inset="left" />
 
@@ -34,7 +38,7 @@
                     <flux:navbar.item
                         class="h-10 max-lg:hidden [&>div>svg]:size-5"
                         icon="book-open-text"
-                        :href="route('profile.edit')"
+                        :href="$profileRoute"
                         wire:navigate
                         :label="__('Account')"
                     />
@@ -65,7 +69,7 @@
                 <flux:sidebar.item icon="folder-git-2" :href="route('dashboard')" wire:navigate>
                     {{ __('Overview') }}
                 </flux:sidebar.item>
-                <flux:sidebar.item icon="book-open-text" :href="route('profile.edit')" wire:navigate>
+                <flux:sidebar.item icon="book-open-text" :href="$profileRoute" wire:navigate>
                     {{ __('Account') }}
                 </flux:sidebar.item>
             </flux:sidebar.nav>

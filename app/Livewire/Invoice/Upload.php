@@ -73,7 +73,7 @@ class Upload extends Component
                         'po' => $invoice->po_id,
                         'company' => $vendor->company_name,
                     ]),
-                    actionUrl: route('invoices.approve', absolute: false),
+                    actionUrl: route('invoices.approve'),
                     actionLabel: __('Review Invoice'),
                     variant: 'info',
                 ));

@@ -1,3 +1,9 @@
+@php
+    $profileRoute = auth()->user()->can('rfq.respond') ? route('vendor.profile') : route('profile.edit');
+    $profileMedia = auth()->user()->getFirstMedia('profile-images');
+    $profileImageUrl = $profileMedia !== null ? route('media.show', $profileMedia) : null;
+@endphp
+
 <flux:dropdown position="bottom" align="start">
     <flux:sidebar.profile
         :name="auth()->user()->name"
@@ -11,6 +17,7 @@
             <flux:avatar
                 :name="auth()->user()->name"
                 :initials="auth()->user()->initials()"
+                :src="$profileImageUrl"
             />
             <div class="grid flex-1 text-start text-sm leading-tight">
                 <flux:heading class="truncate">{{ auth()->user()->name }}</flux:heading>
@@ -31,7 +38,7 @@
         </flux:menu.group>
         <flux:menu.separator />
         <flux:menu.radio.group>
-            <flux:menu.item :href="route('profile.edit')" icon="cog" wire:navigate>
+            <flux:menu.item :href="$profileRoute" icon="cog" wire:navigate>
                 {{ __('Settings') }}
             </flux:menu.item>
             <form

@@ -9,6 +9,7 @@ use App\VendorStatus;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
@@ -20,6 +21,10 @@ class Profile extends Component
 {
     use WithFileUploads;
 
+    public string $userName = '';
+
+    public string $userEmail = '';
+
     public string $companyName = '';
 
     public string $address = '';
@@ -29,6 +34,8 @@ class Profile extends Component
     public string $documentType = '';
 
     public mixed $documentFile = null;
+
+    public mixed $profileImage = null;
 
     /**
      * Mount the component.
@@ -52,6 +59,8 @@ class Profile extends Component
 
         Gate::authorize('update', $vendor);
 
+        $this->userName = $user->name;
+        $this->userEmail = $user->email;
         $this->companyName = $vendor->company_name;
         $this->address = $vendor->address;
         $this->phone = $vendor->phone;
@@ -62,21 +71,51 @@ class Profile extends Component
      */
     public function saveProfile(): void
     {
+        $authUser = Auth::user();
+
+        if ($authUser === null) {
+            abort(401);
+        }
+
         $validated = $this->validate([
+            'userName' => ['required', 'string', 'max:255'],
+            'userEmail' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($authUser->id)],
             'companyName' => ['required', 'string', 'max:255'],
             'address' => ['required', 'string'],
             'phone' => ['required', 'string', 'max:100'],
+            'profileImage' => ['nullable', 'image', 'max:2048'],
         ]);
 
         $vendor = $this->vendorProfile;
 
         Gate::authorize('update', $vendor);
 
+        $authUser->fill([
+            'name' => $validated['userName'],
+            'email' => $validated['userEmail'],
+        ]);
+
+        if ($authUser->isDirty('email')) {
+            $authUser->email_verified_at = null;
+        }
+
+        if ($validated['profileImage'] ?? false) {
+            $media = $authUser
+                ->addMedia($validated['profileImage'])
+                ->toMediaCollection('profile-images');
+
+            $authUser->profile_image = $media->uuid;
+        }
+
+        $authUser->save();
+
         $vendor->update([
             'company_name' => $validated['companyName'],
             'address' => $validated['address'],
             'phone' => $validated['phone'],
         ]);
+
+        $this->reset('profileImage');
 
         Flux::toast(variant: 'success', text: __('Vendor profile updated.'));
     }
@@ -112,7 +151,7 @@ class Profile extends Component
                         'company' => $vendor->company_name,
                         'document_type' => $document->document_type,
                     ]),
-                    actionUrl: route('vendor.register', absolute: false),
+                    actionUrl: route('vendor.register'),
                     actionLabel: __('Review Vendor'),
                     variant: 'info',
                 ));

@@ -5,8 +5,16 @@
                 return null;
             }
 
+            $basePath = trim((string) parse_url(config('app.url') ?? '', PHP_URL_PATH));
+            $basePath = $basePath !== '' && $basePath !== '/' ? '/'.trim($basePath, '/') : '';
+
             $parsedHost = parse_url($url, PHP_URL_HOST);
             if ($parsedHost === null) {
+                if ($basePath !== '' && ! str_starts_with($url, $basePath.'/') && $url !== $basePath) {
+                    $url = '/'.ltrim($url, '/');
+                    $url = $basePath.$url;
+                }
+
                 return $url;
             }
 
@@ -17,6 +25,10 @@
                 $path = parse_url($url, PHP_URL_PATH) ?? '/';
                 $query = parse_url($url, PHP_URL_QUERY);
                 $fragment = parse_url($url, PHP_URL_FRAGMENT);
+
+                if ($basePath !== '' && ! str_starts_with($path, $basePath.'/') && $path !== $basePath) {
+                    $path = $basePath.('/'.ltrim($path, '/'));
+                }
 
                 return $path
                     .($query !== null ? '?'.$query : '')

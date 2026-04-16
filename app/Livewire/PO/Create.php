@@ -146,7 +146,7 @@ class Create extends Component
             message: __('Purchase Order #:po has been issued to your company.', [
                 'po' => $purchaseOrder->id,
             ]),
-            actionUrl: route('pos.show', $purchaseOrder, absolute: false),
+            actionUrl: route('pos.show', $purchaseOrder),
             actionLabel: __('View PO'),
             variant: 'success',
         ));

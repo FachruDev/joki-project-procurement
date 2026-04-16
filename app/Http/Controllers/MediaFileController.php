@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Invoice;
+use App\Models\User;
 use App\Models\VendorDocument;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
@@ -22,6 +24,11 @@ class MediaFileController
             Gate::authorize('view', $model);
         } elseif ($model instanceof VendorDocument) {
             Gate::authorize('view', $model->vendor);
+        } elseif ($model instanceof User) {
+            abort_unless(
+                Auth::id() === $model->id || Auth::user()?->can('user.manage'),
+                403,
+            );
         } else {
             abort(403);
         }

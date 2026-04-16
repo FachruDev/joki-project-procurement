@@ -23,7 +23,39 @@
             data-swal-text="Perubahan profil perusahaan akan disimpan."
             data-swal-icon="question"
         >
-            <flux:heading>{{ __('Company Details') }}</flux:heading>
+            <flux:heading>{{ __('Account & Company Details') }}</flux:heading>
+
+            @php
+                $profileImageMedia = auth()->user()?->getFirstMedia('profile-images');
+            @endphp
+
+            <div class="grid gap-4 md:grid-cols-2">
+                <flux:field>
+                    <flux:label>{{ __('Account Name') }}</flux:label>
+                    <flux:input wire:model="userName" type="text" />
+                    <flux:error name="userName" />
+                </flux:field>
+
+                <flux:field>
+                    <flux:label>{{ __('Account Email') }}</flux:label>
+                    <flux:input wire:model="userEmail" type="email" />
+                    <flux:error name="userEmail" />
+                </flux:field>
+            </div>
+
+            <flux:field>
+                <flux:label>{{ __('Profile Image') }}</flux:label>
+                <flux:input wire:model="profileImage" type="file" accept="image/*" />
+                <flux:error name="profileImage" />
+            </flux:field>
+
+            @if ($profileImageMedia !== null)
+                <div class="rounded-md border border-zinc-200 p-3 dark:border-zinc-700">
+                    <a href="{{ route('media.show', $profileImageMedia) }}" target="_blank" class="text-sm text-blue-600 underline dark:text-blue-400">
+                        {{ __('View current profile image') }}
+                    </a>
+                </div>
+            @endif
 
             <flux:field>
                 <flux:label>{{ __('Company Name') }}</flux:label>

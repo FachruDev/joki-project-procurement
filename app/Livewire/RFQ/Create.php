@@ -85,7 +85,7 @@ class Create extends Component
                     'title' => $rfq->title,
                     'deadline' => $rfq->deadline?->format('Y-m-d H:i'),
                 ]),
-                actionUrl: route('rfqs.respond', $rfq, absolute: false),
+                actionUrl: route('rfqs.respond', $rfq),
                 actionLabel: __('Submit Response'),
                 variant: 'info',
             ));

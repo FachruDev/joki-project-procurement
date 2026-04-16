@@ -113,7 +113,7 @@ class Approve extends Component
             message: $status === InvoiceStatus::Approved
                 ? __('Your invoice for Purchase Order #:po has been approved.', ['po' => $invoice->po_id])
                 : __('Your invoice for Purchase Order #:po has been rejected. Please review and upload an updated invoice.', ['po' => $invoice->po_id]),
-            actionUrl: route('pos.show', $invoice->purchaseOrder, absolute: false),
+            actionUrl: route('pos.show', $invoice->purchaseOrder),
             actionLabel: __('View PO'),
             variant: $status === InvoiceStatus::Approved ? 'success' : 'warning',
         ));

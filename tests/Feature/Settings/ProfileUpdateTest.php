@@ -4,6 +4,9 @@ namespace Tests\Feature\Settings;
 
 use App\Livewire\Settings\Profile;
 use App\Models\User;
+use App\Models\Vendor;
+use App\VendorStatus;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -86,5 +89,22 @@ class ProfileUpdateTest extends TestCase
         $response->assertHasErrors(['password']);
 
         $this->assertNotNull($user->fresh());
+    }
+
+    public function test_vendor_user_is_redirected_to_vendor_profile_from_settings_profile(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $vendorUser = User::factory()->create();
+        $vendorUser->assignRole('Vendor');
+
+        Vendor::factory()->create([
+            'user_id' => $vendorUser->id,
+            'status' => VendorStatus::Approved,
+        ]);
+
+        $this->actingAs($vendorUser)
+            ->get('/settings/profile')
+            ->assertRedirect(route('vendor.profile'));
     }
 }

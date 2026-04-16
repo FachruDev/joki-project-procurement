@@ -24,6 +24,22 @@
                 @endif
             </div>
 
+            @php
+                $profileImageMedia = auth()->user()?->getFirstMedia('profile-images');
+            @endphp
+
+            <flux:field>
+                <flux:label>{{ __('Profile Image') }}</flux:label>
+                <flux:input wire:model="profileImage" type="file" accept="image/*" />
+                <flux:error name="profileImage" />
+            </flux:field>
+
+            @if ($profileImageMedia !== null)
+                <a href="{{ route('media.show', $profileImageMedia) }}" target="_blank" class="text-sm text-blue-600 underline dark:text-blue-400">
+                    {{ __('View current profile image') }}
+                </a>
+            @endif
+
             <div class="flex items-center gap-4">
                 <flux:button variant="primary" type="submit">{{ __('Save') }}</flux:button>
             </div>

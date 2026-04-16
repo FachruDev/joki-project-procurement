@@ -59,7 +59,7 @@ class Create extends Component
             message: __('Goods receipt for Purchase Order #:po has been recorded.', [
                 'po' => $this->purchaseOrder->id,
             ]),
-            actionUrl: route('pos.show', $this->purchaseOrder, absolute: false),
+            actionUrl: route('pos.show', $this->purchaseOrder),
             actionLabel: __('View PO'),
             variant: 'info',
         ));

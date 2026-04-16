@@ -45,7 +45,7 @@ class Register extends Component
             message: __('Your vendor profile for :company has been approved. You can now respond to RFQs and upload invoices.', [
                 'company' => $vendor->company_name,
             ]),
-            actionUrl: route('dashboard', absolute: false),
+            actionUrl: route('dashboard'),
             actionLabel: __('Open Dashboard'),
             variant: 'success',
         ));
@@ -72,7 +72,7 @@ class Register extends Component
             message: __('Your vendor profile for :company was rejected. Please update your profile and documents, then resubmit.', [
                 'company' => $vendor->company_name,
             ]),
-            actionUrl: route('vendor.profile', absolute: false),
+            actionUrl: route('vendor.profile'),
             actionLabel: __('Update Profile'),
             variant: 'warning',
         ));

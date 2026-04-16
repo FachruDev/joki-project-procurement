@@ -9,23 +9,35 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 #[Title('Profile settings')]
 class Profile extends Component
 {
     use ProfileValidationRules;
+    use WithFileUploads;
 
     public string $name = '';
 
     public string $email = '';
+
+    public mixed $profileImage = null;
 
     /**
      * Mount the component.
      */
     public function mount(): void
     {
-        $this->name = Auth::user()->name;
-        $this->email = Auth::user()->email;
+        $user = Auth::user();
+
+        if ($user->can('rfq.respond')) {
+            $this->redirect(route('vendor.profile', absolute: false), navigate: true);
+
+            return;
+        }
+
+        $this->name = $user->name;
+        $this->email = $user->email;
     }
 
     /**
@@ -35,7 +47,13 @@ class Profile extends Component
     {
         $user = Auth::user();
 
-        $validated = $this->validate($this->profileRules($user->id));
+        $validated = $this->validate([
+            ...$this->profileRules($user->id),
+            'profileImage' => ['nullable', 'image', 'max:2048'],
+        ]);
+
+        $profileImage = $validated['profileImage'] ?? null;
+        unset($validated['profileImage']);
 
         $user->fill($validated);
 
@@ -43,7 +61,16 @@ class Profile extends Component
             $user->email_verified_at = null;
         }
 
+        if ($profileImage !== null) {
+            $media = $user
+                ->addMedia($profileImage)
+                ->toMediaCollection('profile-images');
+
+            $user->profile_image = $media->uuid;
+        }
+
         $user->save();
+        $this->reset('profileImage');
 
         Flux::toast(variant: 'success', text: __('Profile updated.'));
     }
