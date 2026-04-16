@@ -17,16 +17,13 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Livewire\WithPagination;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 #[Title('Dashboard')]
 class Dashboard extends Component
 {
-    use WithPagination;
-
-    public int $perPage = 8;
+    public int $recentLimit = 6;
 
     /**
      * Export dashboard reports to an Excel file.
@@ -42,7 +39,6 @@ class Dashboard extends Component
         $vendor = $user->vendor;
 
         $canViewVendorSummary = $user->can('report.vendor.summary');
-        $canViewVendorReport = $this->canViewVendorReport($user);
         $canViewRfqReport = $user->can('rfq.view');
         $canViewPurchaseReport = $user->can('po.view');
         $canViewInvoiceReport = $user->can('invoice.approve') || $user->can('invoice.upload') || $user->can('invoice.view');
@@ -202,49 +198,46 @@ class Dashboard extends Component
             pendingInvoicesCount: $pendingInvoicesCount,
         );
 
-        $vendorsReport = $canViewVendorReport
-            ? (clone $vendorScope)
-                ->with('user:id,name')
-                ->withCount(['rfqs', 'purchaseOrders'])
-                ->withSum('purchaseOrders as total_transaction_amount', 'total_price')
-                ->orderBy('company_name')
-                ->paginate($this->perPage, ['*'], 'vendorsPage')
-            : Vendor::query()->whereRaw('1 = 0')->paginate($this->perPage, ['*'], 'vendorsPage');
-
-        $rfqsReport = $canViewRfqReport
+        $recentRfqs = $canViewRfqReport
             ? (clone $this->rfqScope($vendor))
                 ->withCount('vendors')
-                ->with([
-                    'purchaseOrders' => fn ($query) => $query
-                        ->latest('id')
-                        ->with('vendor:id,company_name'),
-                ])
-                ->orderByDesc('id')
-                ->paginate($this->perPage, ['*'], 'rfqsPage')
-            : Rfq::query()->whereRaw('1 = 0')->paginate($this->perPage, ['*'], 'rfqsPage');
+                ->latest('id')
+                ->limit($this->recentLimit)
+                ->get()
+            : collect();
 
-        $purchaseOrdersReport = $canViewPurchaseReport
+        $recentPurchaseOrders = $canViewPurchaseReport
             ? (clone $this->purchaseOrderScope($vendor))
                 ->with('vendor:id,company_name')
-                ->orderByDesc('id')
-                ->paginate($this->perPage, ['*'], 'purchaseOrdersPage')
-            : PurchaseOrder::query()->whereRaw('1 = 0')->paginate($this->perPage, ['*'], 'purchaseOrdersPage');
+                ->latest('id')
+                ->limit($this->recentLimit)
+                ->get()
+            : collect();
 
-        $invoicesReport = $canViewInvoiceReport
+        $recentInvoices = $canViewInvoiceReport
             ? (clone $this->invoiceScope($vendor))
                 ->with(['vendor:id,company_name', 'purchaseOrder:id,total_price'])
-                ->orderByDesc('id')
-                ->paginate($this->perPage, ['*'], 'invoicesPage')
-            : Invoice::query()->whereRaw('1 = 0')->paginate($this->perPage, ['*'], 'invoicesPage');
+                ->latest('id')
+                ->limit($this->recentLimit)
+                ->get()
+            : collect();
+
+        $recentVendorStatuses = $canViewVendorSummary
+            ? (clone $vendorScope)
+                ->with('user:id,name')
+                ->latest('id')
+                ->limit($this->recentLimit)
+                ->get()
+            : collect();
 
         return view('livewire.vendor.dashboard', [
             'vendor' => $vendor,
             'isVendorPending' => $vendor?->status === VendorStatus::Pending,
             'canViewVendorSummary' => $canViewVendorSummary,
-            'canViewVendorReport' => $canViewVendorReport,
             'canViewRfqReport' => $canViewRfqReport,
             'canViewPurchaseReport' => $canViewPurchaseReport,
             'canViewInvoiceReport' => $canViewInvoiceReport,
+            'canViewSystemReport' => $user->can('report.view'),
             'totalVendors' => $totalVendors,
             'approvedVendorsCount' => $approvedVendorsCount,
             'pendingVendorsCount' => $pendingVendorsCount,
@@ -253,10 +246,10 @@ class Dashboard extends Component
             'pendingInvoicesCount' => $pendingInvoicesCount,
             'vendorStatusChart' => $vendorStatusChart,
             'operationalBars' => $operationalBars,
-            'vendorsReport' => $vendorsReport,
-            'rfqsReport' => $rfqsReport,
-            'purchaseOrdersReport' => $purchaseOrdersReport,
-            'invoicesReport' => $invoicesReport,
+            'recentVendorStatuses' => $recentVendorStatuses,
+            'recentRfqs' => $recentRfqs,
+            'recentPurchaseOrders' => $recentPurchaseOrders,
+            'recentInvoices' => $recentInvoices,
         ]);
     }
 

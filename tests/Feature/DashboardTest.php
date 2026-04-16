@@ -28,7 +28,7 @@ class DashboardTest extends TestCase
         $response->assertOk();
     }
 
-    public function test_admin_dashboard_displays_procurement_reports_sections(): void
+    public function test_admin_dashboard_separates_operational_dashboard_from_report_page(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
 
@@ -40,10 +40,10 @@ class DashboardTest extends TestCase
         $response
             ->assertOk()
             ->assertSee('Dashboard Summary')
-            ->assertSee('Vendor Report')
-            ->assertSee('RFQ Report')
-            ->assertSee('Purchase Report (PO)')
-            ->assertSee('Invoice Report');
+            ->assertSee('Operational Feed')
+            ->assertSee('Open Full Reports')
+            ->assertDontSee('Vendor Report')
+            ->assertDontSee('Purchase Report (PO)');
     }
 
     public function test_sidebar_hides_rfq_menu_for_users_without_rfq_permission(): void
