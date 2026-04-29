@@ -31,6 +31,7 @@ class Dashboard extends Component
         }
 
         $vendor = $user->vendor;
+        $isVendorUser = $user->hasRole('Vendor');
 
         $canViewVendorSummary = $user->can('report.vendor.summary');
         $canViewRfqReport = $user->can('rfq.view');
@@ -108,8 +109,13 @@ class Dashboard extends Component
                 ->get()
             : collect();
 
+        $vendorChartData = $isVendorUser
+            ? $this->buildVendorChartData($vendor)
+            : null;
+
         return view('livewire.vendor.dashboard', [
             'vendor' => $vendor,
+            'isVendorUser' => $isVendorUser,
             'isVendorPending' => $vendor?->status === VendorStatus::Pending,
             'canViewVendorSummary' => $canViewVendorSummary,
             'canViewRfqReport' => $canViewRfqReport,
@@ -128,6 +134,7 @@ class Dashboard extends Component
             'recentRfqs' => $recentRfqs,
             'recentPurchaseOrders' => $recentPurchaseOrders,
             'recentInvoices' => $recentInvoices,
+            'vendorChartData' => $vendorChartData,
         ]);
     }
 
@@ -177,6 +184,69 @@ class Dashboard extends Component
         }
 
         return $query;
+    }
+
+    /**
+     * @return array{
+     *     invoiceStatus: array{labels: array<int, string>, data: array<int, int>},
+     *     monthlyTrend: array{labels: array<int, string>, rfqs: array<int, int>, pos: array<int, int>, invoices: array<int, int>}
+     * }
+     */
+    private function buildVendorChartData(?Vendor $vendor): array
+    {
+        if ($vendor === null) {
+            return [
+                'invoiceStatus' => [
+                    'labels' => [__('Pending'), __('Approved'), __('Rejected')],
+                    'data' => [0, 0, 0],
+                ],
+                'monthlyTrend' => [
+                    'labels' => collect(range(5, 0))->map(fn (int $offset): string => now()->subMonths($offset)->format('M Y'))->all(),
+                    'rfqs' => array_fill(0, 6, 0),
+                    'pos' => array_fill(0, 6, 0),
+                    'invoices' => array_fill(0, 6, 0),
+                ],
+            ];
+        }
+
+        $monthlyComparisons = collect(range(5, 0))
+            ->map(function (int $monthOffset) use ($vendor): array {
+                $from = now()->subMonths($monthOffset)->startOfMonth();
+                $to = $from->copy()->endOfMonth();
+
+                return [
+                    'label' => $from->format('M Y'),
+                    'rfqs' => Rfq::query()
+                        ->whereHas('vendors', fn ($rfqVendorQuery) => $rfqVendorQuery->whereKey($vendor->id))
+                        ->whereBetween('created_at', [$from, $to])
+                        ->count(),
+                    'pos' => PurchaseOrder::query()
+                        ->where('vendor_id', $vendor->id)
+                        ->whereBetween('created_at', [$from, $to])
+                        ->count(),
+                    'invoices' => Invoice::query()
+                        ->where('vendor_id', $vendor->id)
+                        ->whereBetween('created_at', [$from, $to])
+                        ->count(),
+                ];
+            });
+
+        return [
+            'invoiceStatus' => [
+                'labels' => [__('Pending'), __('Approved'), __('Rejected')],
+                'data' => [
+                    Invoice::query()->where('vendor_id', $vendor->id)->where('status', InvoiceStatus::Pending)->count(),
+                    Invoice::query()->where('vendor_id', $vendor->id)->where('status', InvoiceStatus::Approved)->count(),
+                    Invoice::query()->where('vendor_id', $vendor->id)->where('status', InvoiceStatus::Rejected)->count(),
+                ],
+            ],
+            'monthlyTrend' => [
+                'labels' => $monthlyComparisons->pluck('label')->all(),
+                'rfqs' => $monthlyComparisons->pluck('rfqs')->all(),
+                'pos' => $monthlyComparisons->pluck('pos')->all(),
+                'invoices' => $monthlyComparisons->pluck('invoices')->all(),
+            ],
+        ];
     }
 
     /**

@@ -94,6 +94,9 @@ class DashboardTest extends TestCase
             ->assertOk()
             ->assertDontSee('Total Vendor')
             ->assertDontSee('Vendor Approved vs Pending')
-            ->assertDontSee('Vendor Report');
+            ->assertDontSee('Vendor Report')
+            ->assertDontSee('Operational Feed')
+            ->assertSee('Vendor Invoice Status')
+            ->assertSee('Vendor Monthly Trend');
     }
 }

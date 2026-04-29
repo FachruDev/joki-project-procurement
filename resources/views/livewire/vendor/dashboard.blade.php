@@ -139,142 +139,293 @@
         </div>
     </section>
 
-    <section class="space-y-3 rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-            <div>
-                <flux:heading size="lg">{{ __('Operational Feed') }}</flux:heading>
-                <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('Realtime list of the latest transactions and workflow activity.') }}</flux:text>
+    @if ($isVendorUser)
+        <section class="space-y-3 rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <flux:heading size="lg">{{ __('Vendor Analytics') }}</flux:heading>
+                    <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('Trend dan status operasional berdasarkan data vendor Anda.') }}</flux:text>
+                </div>
+                <flux:text class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('2 charts') }}</flux:text>
             </div>
-            @if ($canViewSystemReport)
-                <flux:link :href="route('reports.index')" wire:navigate>{{ __('Need deeper comparison? Open Reports') }}</flux:link>
-            @endif
-        </div>
 
-        @php
-            $feedGridColumns = 0;
-            $feedGridColumns += $canViewVendorSummary ? 1 : 0;
-            $feedGridColumns += $canViewRfqReport ? 1 : 0;
-            $feedGridColumns += $canViewPurchaseReport ? 1 : 0;
-            $feedGridColumns += $canViewInvoiceReport ? 1 : 0;
-            $feedGridClass = match ($feedGridColumns) {
-                4 => 'xl:grid-cols-4',
-                3 => 'xl:grid-cols-3',
-                2 => 'xl:grid-cols-2',
-                default => 'xl:grid-cols-1',
+            <div class="grid gap-4 xl:grid-cols-2">
+                <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+                    <div class="flex items-center justify-between">
+                        <flux:heading size="lg">{{ __('Vendor Invoice Status') }}</flux:heading>
+                        <flux:text class="text-xs text-zinc-500">{{ __('Doughnut') }}</flux:text>
+                    </div>
+                    <div class="mt-4 h-64">
+                        <canvas id="vendor-invoice-status-chart" class="h-full w-full"></canvas>
+                    </div>
+                </div>
+
+                <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+                    <div class="flex items-center justify-between">
+                        <flux:heading size="lg">{{ __('Vendor Monthly Trend') }}</flux:heading>
+                        <flux:text class="text-xs text-zinc-500">{{ __('Line') }}</flux:text>
+                    </div>
+                    <div class="mt-4 h-64">
+                        <canvas id="vendor-monthly-trend-chart" class="h-full w-full"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+    @else
+        <section class="space-y-3 rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <flux:heading size="lg">{{ __('Operational Feed') }}</flux:heading>
+                    <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('Realtime list of the latest transactions and workflow activity.') }}</flux:text>
+                </div>
+                @if ($canViewSystemReport)
+                    <flux:link :href="route('reports.index')" wire:navigate>{{ __('Need deeper comparison? Open Reports') }}</flux:link>
+                @endif
+            </div>
+
+            @php
+                $feedGridColumns = 0;
+                $feedGridColumns += $canViewVendorSummary ? 1 : 0;
+                $feedGridColumns += $canViewRfqReport ? 1 : 0;
+                $feedGridColumns += $canViewPurchaseReport ? 1 : 0;
+                $feedGridColumns += $canViewInvoiceReport ? 1 : 0;
+                $feedGridClass = match ($feedGridColumns) {
+                    4 => 'xl:grid-cols-4',
+                    3 => 'xl:grid-cols-3',
+                    2 => 'xl:grid-cols-2',
+                    default => 'xl:grid-cols-1',
+                };
+            @endphp
+
+            <div class="grid gap-4 {{ $feedGridClass }}">
+                @if ($canViewVendorSummary)
+                    <div class="rounded-xl border border-zinc-200/90 p-4 dark:border-zinc-700">
+                        <div class="mb-3 flex items-center justify-between">
+                            <flux:heading size="sm">{{ __('Latest Vendor Updates') }}</flux:heading>
+                            @can('vendor.manage')
+                                <flux:link :href="route('vendor.index')" wire:navigate>{{ __('View all') }}</flux:link>
+                            @endcan
+                        </div>
+                        <div class="space-y-2">
+                            @forelse ($recentVendorStatuses as $vendorItem)
+                                @php
+                                    $statusColor = match ($vendorItem->status->value) {
+                                        'approved' => 'green',
+                                        'pending' => 'amber',
+                                        default => 'red',
+                                    };
+                                @endphp
+                                <div class="rounded-lg border border-zinc-200 p-3 text-sm dark:border-zinc-700">
+                                    <div class="font-medium">{{ $vendorItem->company_name }}</div>
+                                    <div class="mt-1 flex items-center justify-between">
+                                        <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ $vendorItem->user?->name ?? '-' }}</span>
+                                        <flux:badge :color="$statusColor">{{ strtoupper($vendorItem->status->value) }}</flux:badge>
+                                    </div>
+                                </div>
+                            @empty
+                                <flux:text class="text-sm text-zinc-500">{{ __('No vendor updates.') }}</flux:text>
+                            @endforelse
+                        </div>
+                    </div>
+                @endif
+
+                @if ($canViewRfqReport)
+                    <div class="rounded-xl border border-zinc-200/90 p-4 dark:border-zinc-700">
+                        <div class="mb-3 flex items-center justify-between">
+                            <flux:heading size="sm">{{ __('Latest RFQ') }}</flux:heading>
+                            <flux:link :href="route('rfqs.my')" wire:navigate>{{ __('View all') }}</flux:link>
+                        </div>
+                        <div class="space-y-2">
+                            @forelse ($recentRfqs as $rfqItem)
+                                <div class="rounded-lg border border-zinc-200 p-3 text-sm dark:border-zinc-700">
+                                    <div class="line-clamp-1 font-medium">{{ $rfqItem->title }}</div>
+                                    <div class="mt-1 flex items-center justify-between">
+                                        <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Vendor') }}: {{ $rfqItem->vendors_count }}</span>
+                                        <flux:badge :color="$rfqItem->status->value === 'open' ? 'green' : 'zinc'">{{ strtoupper($rfqItem->status->value) }}</flux:badge>
+                                    </div>
+                                </div>
+                            @empty
+                                <flux:text class="text-sm text-zinc-500">{{ __('No RFQ activity.') }}</flux:text>
+                            @endforelse
+                        </div>
+                    </div>
+                @endif
+
+                @if ($canViewPurchaseReport)
+                    <div class="rounded-xl border border-zinc-200/90 p-4 dark:border-zinc-700">
+                        <div class="mb-3 flex items-center justify-between">
+                            <flux:heading size="sm">{{ __('Latest Purchase Order') }}</flux:heading>
+                            <flux:link :href="route('pos.my')" wire:navigate>{{ __('View all') }}</flux:link>
+                        </div>
+                        <div class="space-y-2">
+                            @forelse ($recentPurchaseOrders as $purchaseOrderItem)
+                                @php
+                                    $purchaseStatusColor = match ($purchaseOrderItem->status->value) {
+                                        'completed' => 'green',
+                                        'approved' => 'cyan',
+                                        default => 'amber',
+                                    };
+                                @endphp
+                                <div class="rounded-lg border border-zinc-200 p-3 text-sm dark:border-zinc-700">
+                                    <div class="font-medium">#{{ $purchaseOrderItem->id }} · {{ $purchaseOrderItem->vendor?->company_name ?? '-' }}</div>
+                                    <div class="mt-1 flex items-center justify-between">
+                                        <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ number_format((float) $purchaseOrderItem->total_price, 2) }}</span>
+                                        <flux:badge :color="$purchaseStatusColor">{{ strtoupper($purchaseOrderItem->status->value) }}</flux:badge>
+                                    </div>
+                                </div>
+                            @empty
+                                <flux:text class="text-sm text-zinc-500">{{ __('No PO activity.') }}</flux:text>
+                            @endforelse
+                        </div>
+                    </div>
+                @endif
+
+                @if ($canViewInvoiceReport)
+                    <div class="rounded-xl border border-zinc-200/90 p-4 dark:border-zinc-700">
+                        <div class="mb-3 flex items-center justify-between">
+                            <flux:heading size="sm">{{ __('Latest Invoice') }}</flux:heading>
+                            <flux:link :href="route('invoices.my')" wire:navigate>{{ __('View all') }}</flux:link>
+                        </div>
+                        <div class="space-y-2">
+                            @forelse ($recentInvoices as $invoiceItem)
+                                @php
+                                    $invoiceStatusColor = match ($invoiceItem->status->value) {
+                                        'approved' => 'green',
+                                        'rejected' => 'red',
+                                        default => 'amber',
+                                    };
+                                @endphp
+                                <div class="rounded-lg border border-zinc-200 p-3 text-sm dark:border-zinc-700">
+                                    <div class="font-medium">#{{ $invoiceItem->id }} · {{ $invoiceItem->vendor?->company_name ?? '-' }}</div>
+                                    <div class="mt-1 flex items-center justify-between">
+                                        <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ number_format((float) ($invoiceItem->purchaseOrder?->total_price ?? 0), 2) }}</span>
+                                        <flux:badge :color="$invoiceStatusColor">{{ strtoupper($invoiceItem->status->value) }}</flux:badge>
+                                    </div>
+                                </div>
+                            @empty
+                                <flux:text class="text-sm text-zinc-500">{{ __('No invoice activity.') }}</flux:text>
+                            @endforelse
+                        </div>
+                    </div>
+                @endif
+            </div>
+        </section>
+    @endif
+
+    @once
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    @endonce
+
+    <script>
+        (() => {
+            window.__vendorDashboardChartPayload = @js($vendorChartData);
+            window.__vendorDashboardChartInstances = window.__vendorDashboardChartInstances || [];
+
+            const renderVendorCharts = () => {
+                if (typeof window.Chart === 'undefined') {
+                    return;
+                }
+
+                window.__vendorDashboardChartInstances.forEach((chartInstance) => chartInstance.destroy());
+                window.__vendorDashboardChartInstances = [];
+
+                const payload = window.__vendorDashboardChartPayload;
+                if (!payload) {
+                    return;
+                }
+
+                const darkMode = document.documentElement.classList.contains('dark');
+                const labelColor = darkMode ? '#d4d4d8' : '#3f3f46';
+                const gridColor = darkMode ? 'rgba(82, 82, 91, 0.45)' : 'rgba(212, 212, 216, 0.7)';
+
+                const vendorInvoiceStatusChart = document.getElementById('vendor-invoice-status-chart');
+                if (vendorInvoiceStatusChart) {
+                    window.__vendorDashboardChartInstances.push(new Chart(vendorInvoiceStatusChart, {
+                        type: 'doughnut',
+                        data: {
+                            labels: payload.invoiceStatus.labels,
+                            datasets: [{
+                                data: payload.invoiceStatus.data,
+                                backgroundColor: ['#f59e0b', '#10b981', '#ef4444'],
+                                borderColor: darkMode ? '#18181b' : '#ffffff',
+                                borderWidth: 3,
+                            }],
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: { color: labelColor },
+                                },
+                            },
+                        },
+                    }));
+                }
+
+                const vendorMonthlyTrendChart = document.getElementById('vendor-monthly-trend-chart');
+                if (vendorMonthlyTrendChart) {
+                    window.__vendorDashboardChartInstances.push(new Chart(vendorMonthlyTrendChart, {
+                        type: 'line',
+                        data: {
+                            labels: payload.monthlyTrend.labels,
+                            datasets: [
+                                {
+                                    label: 'RFQ',
+                                    data: payload.monthlyTrend.rfqs,
+                                    borderColor: '#06b6d4',
+                                    backgroundColor: 'rgba(6, 182, 212, 0.2)',
+                                    tension: 0.35,
+                                },
+                                {
+                                    label: 'PO',
+                                    data: payload.monthlyTrend.pos,
+                                    borderColor: '#6366f1',
+                                    backgroundColor: 'rgba(99, 102, 241, 0.2)',
+                                    tension: 0.35,
+                                },
+                                {
+                                    label: 'Invoice',
+                                    data: payload.monthlyTrend.invoices,
+                                    borderColor: '#f59e0b',
+                                    backgroundColor: 'rgba(245, 158, 11, 0.2)',
+                                    tension: 0.35,
+                                },
+                            ],
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                x: {
+                                    ticks: { color: labelColor },
+                                    grid: { color: gridColor },
+                                },
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: { color: labelColor, precision: 0 },
+                                    grid: { color: gridColor },
+                                },
+                            },
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: { color: labelColor },
+                                },
+                            },
+                        },
+                    }));
+                }
             };
-        @endphp
 
-        <div class="grid gap-4 {{ $feedGridClass }}">
-            @if ($canViewVendorSummary)
-                <div class="rounded-xl border border-zinc-200/90 p-4 dark:border-zinc-700">
-                    <div class="mb-3 flex items-center justify-between">
-                        <flux:heading size="sm">{{ __('Latest Vendor Updates') }}</flux:heading>
-                        @can('vendor.manage')
-                            <flux:link :href="route('vendor.index')" wire:navigate>{{ __('View all') }}</flux:link>
-                        @endcan
-                    </div>
-                    <div class="space-y-2">
-                        @forelse ($recentVendorStatuses as $vendorItem)
-                            @php
-                                $statusColor = match ($vendorItem->status->value) {
-                                    'approved' => 'green',
-                                    'pending' => 'amber',
-                                    default => 'red',
-                                };
-                            @endphp
-                            <div class="rounded-lg border border-zinc-200 p-3 text-sm dark:border-zinc-700">
-                                <div class="font-medium">{{ $vendorItem->company_name }}</div>
-                                <div class="mt-1 flex items-center justify-between">
-                                    <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ $vendorItem->user?->name ?? '-' }}</span>
-                                    <flux:badge :color="$statusColor">{{ strtoupper($vendorItem->status->value) }}</flux:badge>
-                                </div>
-                            </div>
-                        @empty
-                            <flux:text class="text-sm text-zinc-500">{{ __('No vendor updates.') }}</flux:text>
-                        @endforelse
-                    </div>
-                </div>
-            @endif
+            if (!window.__vendorDashboardChartEventsBound) {
+                window.__vendorDashboardChartEventsBound = true;
+                document.addEventListener('livewire:navigated', renderVendorCharts);
+                document.addEventListener('DOMContentLoaded', renderVendorCharts);
+            }
 
-            @if ($canViewRfqReport)
-                <div class="rounded-xl border border-zinc-200/90 p-4 dark:border-zinc-700">
-                    <div class="mb-3 flex items-center justify-between">
-                        <flux:heading size="sm">{{ __('Latest RFQ') }}</flux:heading>
-                        <flux:link :href="route('rfqs.my')" wire:navigate>{{ __('View all') }}</flux:link>
-                    </div>
-                    <div class="space-y-2">
-                        @forelse ($recentRfqs as $rfqItem)
-                            <div class="rounded-lg border border-zinc-200 p-3 text-sm dark:border-zinc-700">
-                                <div class="line-clamp-1 font-medium">{{ $rfqItem->title }}</div>
-                                <div class="mt-1 flex items-center justify-between">
-                                    <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Vendor') }}: {{ $rfqItem->vendors_count }}</span>
-                                    <flux:badge :color="$rfqItem->status->value === 'open' ? 'green' : 'zinc'">{{ strtoupper($rfqItem->status->value) }}</flux:badge>
-                                </div>
-                            </div>
-                        @empty
-                            <flux:text class="text-sm text-zinc-500">{{ __('No RFQ activity.') }}</flux:text>
-                        @endforelse
-                    </div>
-                </div>
-            @endif
-
-            @if ($canViewPurchaseReport)
-                <div class="rounded-xl border border-zinc-200/90 p-4 dark:border-zinc-700">
-                    <div class="mb-3 flex items-center justify-between">
-                        <flux:heading size="sm">{{ __('Latest Purchase Order') }}</flux:heading>
-                        <flux:link :href="route('pos.my')" wire:navigate>{{ __('View all') }}</flux:link>
-                    </div>
-                    <div class="space-y-2">
-                        @forelse ($recentPurchaseOrders as $purchaseOrderItem)
-                            @php
-                                $purchaseStatusColor = match ($purchaseOrderItem->status->value) {
-                                    'completed' => 'green',
-                                    'approved' => 'cyan',
-                                    default => 'amber',
-                                };
-                            @endphp
-                            <div class="rounded-lg border border-zinc-200 p-3 text-sm dark:border-zinc-700">
-                                <div class="font-medium">#{{ $purchaseOrderItem->id }} · {{ $purchaseOrderItem->vendor?->company_name ?? '-' }}</div>
-                                <div class="mt-1 flex items-center justify-between">
-                                    <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ number_format((float) $purchaseOrderItem->total_price, 2) }}</span>
-                                    <flux:badge :color="$purchaseStatusColor">{{ strtoupper($purchaseOrderItem->status->value) }}</flux:badge>
-                                </div>
-                            </div>
-                        @empty
-                            <flux:text class="text-sm text-zinc-500">{{ __('No PO activity.') }}</flux:text>
-                        @endforelse
-                    </div>
-                </div>
-            @endif
-
-            @if ($canViewInvoiceReport)
-                <div class="rounded-xl border border-zinc-200/90 p-4 dark:border-zinc-700">
-                    <div class="mb-3 flex items-center justify-between">
-                        <flux:heading size="sm">{{ __('Latest Invoice') }}</flux:heading>
-                        <flux:link :href="route('invoices.my')" wire:navigate>{{ __('View all') }}</flux:link>
-                    </div>
-                    <div class="space-y-2">
-                        @forelse ($recentInvoices as $invoiceItem)
-                            @php
-                                $invoiceStatusColor = match ($invoiceItem->status->value) {
-                                    'approved' => 'green',
-                                    'rejected' => 'red',
-                                    default => 'amber',
-                                };
-                            @endphp
-                            <div class="rounded-lg border border-zinc-200 p-3 text-sm dark:border-zinc-700">
-                                <div class="font-medium">#{{ $invoiceItem->id }} · {{ $invoiceItem->vendor?->company_name ?? '-' }}</div>
-                                <div class="mt-1 flex items-center justify-between">
-                                    <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ number_format((float) ($invoiceItem->purchaseOrder?->total_price ?? 0), 2) }}</span>
-                                    <flux:badge :color="$invoiceStatusColor">{{ strtoupper($invoiceItem->status->value) }}</flux:badge>
-                                </div>
-                            </div>
-                        @empty
-                            <flux:text class="text-sm text-zinc-500">{{ __('No invoice activity.') }}</flux:text>
-                        @endforelse
-                    </div>
-                </div>
-            @endif
-        </div>
-    </section>
+            renderVendorCharts();
+        })();
+    </script>
 </section>
