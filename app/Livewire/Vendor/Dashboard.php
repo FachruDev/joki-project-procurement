@@ -2,7 +2,6 @@
 
 namespace App\Livewire\Vendor;
 
-use App\Actions\Exports\DashboardReportExport;
 use App\InvoiceStatus;
 use App\Models\Invoice;
 use App\Models\PurchaseOrder;
@@ -17,131 +16,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Maatwebsite\Excel\Facades\Excel;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 #[Title('Dashboard')]
 class Dashboard extends Component
 {
     public int $recentLimit = 6;
-
-    /**
-     * Export dashboard reports to an Excel file.
-     */
-    public function exportToExcel(): BinaryFileResponse
-    {
-        $user = Auth::user();
-
-        if ($user === null) {
-            abort(401);
-        }
-
-        $vendor = $user->vendor;
-
-        $canViewVendorSummary = $user->can('report.vendor.summary');
-        $canViewRfqReport = $user->can('rfq.view');
-        $canViewPurchaseReport = $user->can('po.view');
-        $canViewInvoiceReport = $user->can('invoice.approve') || $user->can('invoice.upload') || $user->can('invoice.view');
-
-        $vendorScope = $this->vendorScope($user, $vendor);
-
-        $summary = [
-            'total_vendors' => $canViewVendorSummary ? (clone $vendorScope)->count() : 0,
-            'approved_vendors' => $canViewVendorSummary
-                ? (clone $vendorScope)->where('status', VendorStatus::Approved)->count()
-                : 0,
-            'pending_vendors' => $canViewVendorSummary
-                ? (clone $vendorScope)->where('status', VendorStatus::Pending)->count()
-                : 0,
-            'active_rfqs' => $canViewRfqReport
-                ? (clone $this->rfqScope($vendor))->where('status', RfqStatus::Open)->count()
-                : 0,
-            'active_pos' => $canViewPurchaseReport
-                ? (clone $this->purchaseOrderScope($vendor))
-                    ->whereIn('status', [PurchaseOrderStatus::Draft, PurchaseOrderStatus::Approved])
-                    ->count()
-                : 0,
-            'pending_invoices' => $canViewInvoiceReport
-                ? (clone $this->invoiceScope($vendor))->where('status', InvoiceStatus::Pending)->count()
-                : 0,
-        ];
-
-        $vendors = $canViewVendorReport
-            ? (clone $vendorScope)
-                ->withCount(['rfqs', 'purchaseOrders'])
-                ->withSum('purchaseOrders as total_transaction_amount', 'total_price')
-                ->orderBy('company_name')
-                ->get()
-                ->map(fn (Vendor $vendorItem): array => [
-                    'company_name' => $vendorItem->company_name,
-                    'status' => strtoupper($vendorItem->status->value),
-                    'rfq_joined' => $vendorItem->rfqs_count,
-                    'po_won' => $vendorItem->purchase_orders_count,
-                    'total_transaction' => number_format((float) ($vendorItem->total_transaction_amount ?? 0), 2),
-                ])
-                ->all()
-            : [];
-
-        $rfqs = $canViewRfqReport
-            ? (clone $this->rfqScope($vendor))
-                ->withCount('vendors')
-                ->with([
-                    'purchaseOrders' => fn ($query) => $query
-                        ->latest('id')
-                        ->with('vendor:id,company_name'),
-                ])
-                ->orderByDesc('id')
-                ->get()
-                ->map(fn (Rfq $rfqItem): array => [
-                    'title' => $rfqItem->title,
-                    'vendor_joined' => $rfqItem->vendors_count,
-                    'selected_vendor' => $rfqItem->purchaseOrders->first()?->vendor?->company_name ?? '-',
-                    'status' => strtoupper($rfqItem->status->value),
-                ])
-                ->all()
-            : [];
-
-        $purchaseOrders = $canViewPurchaseReport
-            ? (clone $this->purchaseOrderScope($vendor))
-                ->with('vendor:id,company_name')
-                ->orderByDesc('id')
-                ->get()
-                ->map(fn (PurchaseOrder $purchaseOrder): array => [
-                    'po_number' => '#'.$purchaseOrder->id,
-                    'vendor' => $purchaseOrder->vendor?->company_name ?? '-',
-                    'total_price' => number_format((float) $purchaseOrder->total_price, 2),
-                    'status' => strtoupper($purchaseOrder->status->value),
-                    'date' => $purchaseOrder->created_at?->format('Y-m-d H:i') ?? '-',
-                ])
-                ->all()
-            : [];
-
-        $invoices = $canViewInvoiceReport
-            ? (clone $this->invoiceScope($vendor))
-                ->with(['vendor:id,company_name', 'purchaseOrder:id,total_price'])
-                ->orderByDesc('id')
-                ->get()
-                ->map(fn (Invoice $invoice): array => [
-                    'invoice_number' => '#'.$invoice->id,
-                    'vendor' => $invoice->vendor?->company_name ?? '-',
-                    'value' => number_format((float) ($invoice->purchaseOrder?->total_price ?? 0), 2),
-                    'status' => strtoupper($invoice->status->value),
-                    'date' => $invoice->created_at?->format('Y-m-d H:i') ?? '-',
-                ])
-                ->all()
-            : [];
-
-        return Excel::download(
-            new DashboardReportExport(
-                summary: $summary,
-                vendors: $vendors,
-                rfqs: $rfqs,
-                purchaseOrders: $purchaseOrders,
-                invoices: $invoices,
-            ),
-            'dashboard-report-'.now()->format('Ymd_His').'.xlsx',
-        );
-    }
 
     public function render(): View
     {
@@ -154,7 +33,6 @@ class Dashboard extends Component
         $vendor = $user->vendor;
 
         $canViewVendorSummary = $user->can('report.vendor.summary');
-        $canViewVendorReport = $this->canViewVendorReport($user);
         $canViewRfqReport = $user->can('rfq.view');
         $canViewPurchaseReport = $user->can('po.view');
         $canViewInvoiceReport = $user->can('invoice.approve') || $user->can('invoice.upload') || $user->can('invoice.view');
@@ -266,18 +144,6 @@ class Dashboard extends Component
         }
 
         return $query;
-    }
-
-    /**
-     * Determine if vendor report section should be visible.
-     */
-    private function canViewVendorReport(User $user): bool
-    {
-        if ($user->hasRole('Vendor')) {
-            return false;
-        }
-
-        return $user->can('vendor.manage');
     }
 
     private function rfqScope(?Vendor $vendor): Builder

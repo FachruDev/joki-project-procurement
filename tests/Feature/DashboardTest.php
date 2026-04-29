@@ -42,6 +42,7 @@ class DashboardTest extends TestCase
             ->assertSee('Dashboard Summary')
             ->assertSee('Operational Feed')
             ->assertSee('Open Full Reports')
+            ->assertDontSee('Export Dashboard Excel')
             ->assertDontSee('Vendor Report')
             ->assertDontSee('Purchase Report (PO)');
     }

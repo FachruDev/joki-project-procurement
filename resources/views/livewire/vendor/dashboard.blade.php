@@ -12,9 +12,6 @@
             </div>
 
             <div class="flex flex-wrap gap-2">
-                @if (auth()->user()->canAny(['report.vendor.summary', 'vendor.manage', 'rfq.view', 'po.view', 'invoice.approve', 'invoice.upload', 'invoice.view']))
-                    <flux:button variant="filled" icon="arrow-down-tray" wire:click="exportToExcel">{{ __('Export Dashboard Excel') }}</flux:button>
-                @endif
                 @if ($canViewSystemReport)
                     <flux:button variant="primary" icon="presentation-chart-line" :href="route('reports.index')" wire:navigate>{{ __('Open Full Reports') }}</flux:button>
                 @endif
